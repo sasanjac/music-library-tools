@@ -28,13 +28,13 @@ def test_music_import_daemon(teardown, src_path, export_path):
     export_electro_path = Path("./tests/test_data/export_electro/")
     export_general_path = Path("./tests/test_data/export_general/")
     export_path = Path(export_path)
-    MID = MusicImportDaemon(
+    mid = MusicImportDaemon(
         import_path=import_path,
         todo_path=todo_path,
         export_electro_path=export_electro_path,
         export_general_path=export_general_path,
     )
-    MID.import_music()
+    mid.import_music()
     children = list(export_path.glob("[!.]*"))
     assert len(children) == 1
     shutil.rmtree(children[0])
