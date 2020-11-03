@@ -21,6 +21,7 @@ def run():
         export_general_path=export_general_path,
     )
 
+    mid.import_music()
     schedule.every(15).minutes.do(mid.import_music)
 
     while True:
