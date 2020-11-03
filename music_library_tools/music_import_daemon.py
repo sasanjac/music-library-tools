@@ -11,7 +11,7 @@ from mutagen.easyid3 import EasyID3
 from mutagen.flac import FLAC
 from pathvalidate import sanitize_filepath
 
-logging.basicConfig(format="%(asctime)-15s %(message)s", level=logging.DEBUG)
+logging.basicConfig(format="%(asctime)-15s %(message)s", level=logging.INFO)
 logger = logging.getLogger()
 logger.info("Logger started")
 
@@ -199,7 +199,7 @@ class MusicImportDaemon:
         artist_dirs = [d for d in self.import_path.iterdir() if d.is_dir()]
         for art_dir in artist_dirs:
             album_dirs = [d for d in art_dir.iterdir() if d.is_dir()]
-            logger.info("Importing the following albums: %s", album_dirs)
+            logger.info("Importing albums for artist %s: %s", art_dir.name, ", ".join([e.name for e in album_dirs]))
             try:
                 for d in album_dirs:
                     id3_data = {}

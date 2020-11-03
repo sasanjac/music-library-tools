@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 
-from pathlib import Path
-import schedule
-from music_library_tools.music_import_daemon import MusicImportDaemon
 import time
+from pathlib import Path
+
+import schedule
+
+from music_library_tools.music_import_daemon import MusicImportDaemon
 
 
 def run():
