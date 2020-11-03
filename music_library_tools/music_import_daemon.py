@@ -1,11 +1,10 @@
 import logging
 import re
+import shutil
 import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Union
-from typing import Dict
-from typing import List
+from typing import Dict, List, Union
 
 import requests
 from mutagen.easyid3 import EasyID3
@@ -86,7 +85,7 @@ class MusicImportDaemon:
         if not any([g in genre for g in ELECTRO_GENRES]):
             export_path = self.export_general_path / file.parent.parent.name / file.parent.name
             export_path.mkdir(parents=True, exist_ok=True)
-            file.parent.rename(export_path)
+            shutil.move(str(file.parent), str(export_path))
             raise ValueError("Album is general Music.")
 
     def _compile_album_artists(self, files: List[Path]) -> str:
@@ -192,7 +191,7 @@ class MusicImportDaemon:
 
     def _export_file(self, file: Path, export_path: Path) -> None:
         output_file = export_path / file.name
-        file.rename(output_file)
+        shutil.move(str(file), str(output_file))
         output_file.chmod(0o0777)
 
     def import_music(self):
