@@ -13,7 +13,6 @@ from pathvalidate import sanitize_filepath
 
 logging.basicConfig(format="%(asctime)-15s %(message)s", level=logging.INFO)
 logger = logging.getLogger()
-logger.info("Logger started")
 
 REPS = [
     ("(", ""),
