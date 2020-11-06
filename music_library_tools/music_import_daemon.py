@@ -80,12 +80,15 @@ class MusicImportDaemon:
 
     def _filter_general_music(self, file: Path) -> None:
         audio_format = self._get_audio_format(file)
-        genre = audio_format(str(file))["genre"][0].upper()
-        if not any([g in genre for g in ELECTRO_GENRES]):
-            export_path = self.export_general_path / file.parent.parent.name / file.parent.name
-            export_path.mkdir(parents=True, exist_ok=True)
-            shutil.move(str(file.parent), str(export_path))
-            raise ValueError("Album is general Music.")
+        try:
+            genre = audio_format(str(file))["genre"][0].upper()
+            if not any([g in genre for g in ELECTRO_GENRES]):
+                export_path = self.export_general_path / file.parent.parent.name / file.parent.name
+                export_path.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(file.parent), str(export_path))
+                raise ValueError("Album is general Music.")
+        except KeyError:
+            pass
 
     def _compile_album_artists(self, files: List[Path]) -> str:
         audio_format = self._get_audio_format(files[0])
