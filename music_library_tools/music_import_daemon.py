@@ -218,7 +218,7 @@ class MusicImportDaemon:
                         audio_file = audio_format(str(files[0]))
                         id3_data["album"] = audio_file["album"][0]
                         logger.info(f"Converting album {id3_data['album']}.")
-                        id3_data["genre"] = audio_file["genre"][0]
+                        id3_data["genre"] = audio_file.get("genre", [""])[0]
                         id3_data["albumartist"] = self._compile_album_artists(files=files)
                         id3_data = self._get_id3_from_beatport(files=files, id3_data=id3_data)
                         export_path = self._create_export_path(id3_data)
@@ -227,7 +227,10 @@ class MusicImportDaemon:
                             self._export_file(file=f, export_path=export_path)
                         (d / "cover.jpg").unlink()
                         self._clear_DS_STORE(d)
-                        d.rmdir()
+                        try:
+                            d.rmdir()
+                        except OSError as e:
+                            logger.exception(e)
                         logger.info(f"Finished Converting album {id3_data['album']}.")
                     except ValueError as e:
                         logger.exception(e)
@@ -235,5 +238,8 @@ class MusicImportDaemon:
             except Exception as e:
                 logger.exception(e)
             self._clear_DS_STORE(art_dir)
-            art_dir.rmdir()
+            try:
+                art_dir.rmdir()
+            except OSError as e:
+                logger.exception(e)
         logger.info("Finished Music Conversion successfully")
