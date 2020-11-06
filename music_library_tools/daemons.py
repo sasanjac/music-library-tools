@@ -5,7 +5,7 @@ from pathlib import Path
 
 import schedule
 
-from .music_import_daemon import MusicImportDaemon
+from music_library_tools.music_import_daemon import MusicImportDaemon
 
 
 def run():
