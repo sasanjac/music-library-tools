@@ -194,18 +194,18 @@ class MusicImportDaemon:
         output_file.chmod(0o0777)
 
     def _clear_DS_STORE(self, path: Path) -> None:
-        [f.unlink() for f in path.iterdir() if f.name == ".DS_Store"]
+        for f in path.iterdir():
+            if f.name == ".DS_Store":
+                f.unlink()
 
     def import_music(self):
         logger.info("Starting Music Import")
         artist_dirs = [d for d in self.import_path.iterdir() if d.is_dir()]
         for art_dir in artist_dirs:
-            self._clear_DS_STORE(art_dir)
             album_dirs = [d for d in art_dir.iterdir() if d.is_dir()]
             logger.info("Importing albums for artist %s: %s", art_dir.name, ", ".join([e.name for e in album_dirs]))
             try:
                 for d in album_dirs:
-                    self._clear_DS_STORE(d)
                     id3_data = {}
                     try:
                         files = self._prepare_files(dir=d)
@@ -223,6 +223,7 @@ class MusicImportDaemon:
                             self._finalize_file(file=f, id3_data=id3_data)
                             self._export_file(file=f, export_path=export_path)
                         (d / "cover.jpg").unlink()
+                        self._clear_DS_STORE(d)
                         d.rmdir()
                         logger.info(f"Finished Converting album {id3_data['album']}.")
                     except ValueError as e:
@@ -230,5 +231,6 @@ class MusicImportDaemon:
                         continue
             except Exception as e:
                 logger.exception(e)
+            self._clear_DS_STORE(art_dir)
             art_dir.rmdir()
         logger.info("Finished Music Conversion successfully")
