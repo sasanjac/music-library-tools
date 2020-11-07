@@ -11,7 +11,6 @@ from mutagen.easyid3 import EasyID3
 from mutagen.flac import FLAC
 from pathvalidate import sanitize_filepath
 
-logging.basicConfig(format="%(asctime)-15s %(message)s", level=logging.INFO)
 logger = logging.getLogger()
 
 REPS = [

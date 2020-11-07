@@ -1,12 +1,15 @@
 #!/usr/bin/python3
 
+import logging
 import time
 from pathlib import Path
 
 import schedule
 
+from music_library_tools.music_cleanup_daemon import MusicCleanupDaemon
 from music_library_tools.music_import_daemon import MusicImportDaemon
 
+logging.basicConfig(format="%(asctime)-15s %(message)s", level=logging.INFO)
 
 import_path = Path("/data/import")
 todo_path = Path("/data/todo")
@@ -23,6 +26,14 @@ mid = MusicImportDaemon(
 
 mid.import_music()
 schedule.every(15).minutes.do(mid.import_music)
+
+mcd = MusicCleanupDaemon(
+    todo_path=todo_path,
+    export_path=export_electro_path,
+)
+
+mcd.cleanup_music()
+schedule.every(15).minutes.do(mcd.cleanup_music)
 
 while True:
     schedule.run_pending()
