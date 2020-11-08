@@ -37,4 +37,4 @@ schedule.every(15).minutes.do(mcd.cleanup_music)
 
 while True:
     schedule.run_pending()
-    time.sleep(1)
+    time.sleep(10)

@@ -4,46 +4,14 @@ import shutil
 import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Union
-
+from typing import Dict, List
+from music_library_tools import utils
 import requests
-from mutagen.easyid3 import EasyID3
-from mutagen.flac import FLAC
 from pathvalidate import sanitize_filepath
 
 logger = logging.getLogger()
 
-REPS = [
-    ("(", ""),
-    (")", ""),
-    ("Ü", "U"),
-    ("Ü", "O"),
-    ("Ä", "A"),
-    ("Å", "A"),
-    ("Ø", "O"),
-    ("É", "E"),
-    ("Ï", "I"),
-    (" - ", " "),
-    ("EP", "E.P."),
-    ("Ș", "S"),
-    ("&", "AND"),
-    ("'", ""),
-]
-
 ELECTRO_GENRES = ["TECHNO", "HOUSE", "ELECTRO", "DANCE"]
-
-
-def replace_all(string) -> str:
-    for token, replacement in REPS:
-        string = string.replace(token, replacement)
-    return string
-
-
-def split_from_to(text, froms, to) -> str:
-    for frm in froms:
-        text = text.split(frm)[1]
-    return text.split(to)[0]
-
 
 MIX_STRS = ["MIX", "REMIX", "EDIT", "REWORK", "BOOTLEG", "VERSION", "DUB", "ENACTMENT"]
 
@@ -54,9 +22,6 @@ class MusicImportDaemon:
     todo_path: Path
     export_electro_path: Path
     export_general_path: Path
-
-    def _get_audio_format(self, file: Path) -> Union[FLAC, EasyID3]:
-        return FLAC if file.suffix == ".flac" else EasyID3
 
     def _prepare_files(self, dir: Path) -> List[Path]:
         files = [f for f in dir.iterdir() if f.is_file()]
@@ -72,13 +37,13 @@ class MusicImportDaemon:
         return files
 
     def _check_track_numbers(self, files: List[Path]) -> None:
-        audio_format = self._get_audio_format(files[0])
+        audio_format = utils.get_audio_format(files[0])
         track_nos = [int(audio_format(str(f))["tracknumber"][0]) for f in files]
         if not max(track_nos) == len(track_nos):
             raise ValueError("Less audio files than tracks in album.")
 
     def _filter_general_music(self, file: Path) -> None:
-        audio_format = self._get_audio_format(file)
+        audio_format = utils.get_audio_format(file)
         try:
             genre = audio_format(str(file))["genre"][0].upper()
             if not any([g in genre for g in ELECTRO_GENRES]):
@@ -90,7 +55,7 @@ class MusicImportDaemon:
             pass
 
     def _compile_album_artists(self, files: List[Path]) -> str:
-        audio_format = self._get_audio_format(files[0])
+        audio_format = utils.get_audio_format(files[0])
         try:
             artists = [e for f in files for e in audio_format(str(f))["albumartist"][0].split(", ")]
         except KeyError:
@@ -109,7 +74,7 @@ class MusicImportDaemon:
                 return audio_file["artist"][0]
 
     def _create_request(self, files: List[Path], id3_data: Dict[str, str]) -> str:
-        audio_format = self._get_audio_format(files[0])
+        audio_format = utils.get_audio_format(files[0])
         audio_file = audio_format(str(files[0]))
         req_album = urllib.parse.quote_plus(id3_data["album"])
         if id3_data["albumartist"] == "Various Artists":
@@ -131,11 +96,11 @@ class MusicImportDaemon:
             ids = list(set(ids))
             for id in ids:
                 r = requests.get("https://www.beatport.com/release/" + id)
-                bp_album = split_from_to(r.text, ['"og:title" content="'], " von")
-                bp_albums = [bp_album.upper(), replace_all(bp_album.upper())]
-                albums = [id3_data["album"].upper(), replace_all(id3_data["album"].upper())]
+                bp_album = utils.split_from_to(r.text, ['"og:title" content="'], " von")
+                bp_albums = [bp_album.upper(), utils.replace_all(bp_album.upper())]
+                albums = [id3_data["album"].upper(), utils.replace_all(id3_data["album"].upper())]
                 if any(i in bp_albums for i in albums):
-                    isrc_str = split_from_to(r.text, ['"catalog": "'], '"')
+                    isrc_str = utils.split_from_to(r.text, ['"catalog": "'], '"')
                     try:
                         isrc = re.split(r"(\d+)", isrc_str)[:3]
                         if isrc[2] in ["DIG", "CD", "DIGITAL"]:
@@ -143,7 +108,7 @@ class MusicImportDaemon:
                         id3_data["isrc"] = "".join(isrc)
                     except Exception:
                         id3_data["isrc"] = isrc_str
-                    id3_data["genre"] = split_from_to(r.text, ['"genres":', '"name": "'], '"')
+                    id3_data["genre"] = utils.split_from_to(r.text, ['"genres":', '"name": "'], '"')
                     return id3_data
             raise IndexError
         except Exception:
@@ -163,7 +128,7 @@ class MusicImportDaemon:
         return export_path
 
     def _finalize_file(self, file: Path, id3_data: Dict[str, str]) -> None:
-        audio_format = self._get_audio_format(file=file)
+        audio_format = utils.get_audio_format(file=file)
         audio_file = audio_format(str(file))
         audio_file["isrc"] = id3_data["isrc"]
         audio_file["album"] = id3_data["isrc"] + " - " + audio_file["album"][0]
@@ -190,16 +155,6 @@ class MusicImportDaemon:
         audio_file["albumartist"] = id3_data["albumartist"]
         audio_file.save()
 
-    def _export_file(self, file: Path, export_path: Path) -> None:
-        output_file = export_path / file.name
-        shutil.move(str(file), str(output_file))
-        output_file.chmod(0o0777)
-
-    def _clear_DS_STORE(self, path: Path) -> None:
-        for f in path.iterdir():
-            if f.name == ".DS_Store":
-                f.unlink()
-
     def import_music(self):
         logger.info("Starting Music Import")
         artist_dirs = [d for d in self.import_path.iterdir() if d.is_dir()]
@@ -223,22 +178,14 @@ class MusicImportDaemon:
                         export_path = self._create_export_path(id3_data)
                         for f in files:
                             self._finalize_file(file=f, id3_data=id3_data)
-                            self._export_file(file=f, export_path=export_path)
+                            utils.export_file(file=f, export_path=export_path)
                         (d / "cover.jpg").unlink()
-                        self._clear_DS_STORE(d)
-                        try:
-                            d.rmdir()
-                        except OSError as e:
-                            logger.exception(e)
+                        utils.delete_dir(d)
                         logger.info(f"Finished Converting album {id3_data['album']}.")
                     except ValueError as e:
                         logger.exception(e)
                         continue
             except Exception as e:
                 logger.exception(e)
-            self._clear_DS_STORE(art_dir)
-            try:
-                art_dir.rmdir()
-            except OSError as e:
-                logger.exception(e)
-        logger.info("Finished Music Conversion successfully")
+            utils.delete_dir(art_dir)
+        logger.info("Completed Music Conversion successfully")

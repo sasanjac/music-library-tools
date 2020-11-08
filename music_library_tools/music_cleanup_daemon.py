@@ -5,6 +5,7 @@ from pathlib import Path
 
 from pathvalidate import sanitize_filepath
 from tinytag import TinyTag
+from music_library_tools import utils
 
 logger = logging.getLogger()
 
@@ -63,16 +64,11 @@ class MusicCleanupDaemon:
                     file_output_dir.mkdir(parents=True, exist_ok=True)
                     shutil.move(str(f), output_file)
 
-                try:
-                    alb_dir.rmdir()
-                except OSError:
-                    pass
+                utils.delete_dir(alb_dir)
             except Exception:
                 logger.exception("Exception in program while processing %s:", alb_dir)
 
-        artist_dirs = [d for d in self.export_path.iterdir() if d.is_dir()]
-        for artist_dir in artist_dirs:
-            try:
-                artist_dir.rmdir()
-            except OSError:
-                pass
+        artist_dirs = [d for d in self.todo_path.iterdir() if d.is_dir()]
+        for art_dir in artist_dirs:
+            utils.delete_dir(art_dir)
+        logger.info("Completed Music Cleanup successfully")
