@@ -168,7 +168,7 @@ class MusicImportDaemon:
                         files = self._prepare_files(dir=d)
                         self._check_track_numbers(files=files)
                         self._filter_general_music(files[0])
-                        audio_format = self._get_audio_format(files[0])
+                        audio_format = utils.get_audio_format(files[0])
                         audio_file = audio_format(str(files[0]))
                         id3_data["album"] = audio_file["album"][0]
                         logger.info(f"Converting album {id3_data['album']}.")
