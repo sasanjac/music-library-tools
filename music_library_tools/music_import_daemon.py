@@ -57,10 +57,10 @@ class MusicImportDaemon:
     def _compile_album_artists(self, files: List[Path]) -> str:
         audio_format = utils.get_audio_format(files[0])
         try:
-            artists = [e for f in files for e in audio_format(str(f))["albumartist"][0].split(", ")]
+            artists = [e for f in files for e in audio_format(str(f))["artist"][0].split(", ")]
         except KeyError:
             try:
-                artists = [e for f in files for e in audio_format(str(f))["artist"][0].split(", ")]
+                artists = [e for f in files for e in audio_format(str(f))["albumartist"][0].split(", ")]
             except KeyError:
                 raise ValueError("Could not find artists.")
 
