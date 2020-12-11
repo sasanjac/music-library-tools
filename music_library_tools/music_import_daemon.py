@@ -45,7 +45,7 @@ class MusicImportDaemon:
     def _filter_general_music(self, file: Path) -> None:
         audio_format = utils.get_audio_format(file)
         try:
-            genre = audio_format(str(file))["genre"][0].upper()
+            genre = " ".join(audio_format(str(file))["genre"]).upper()
             if not any([g in genre for g in ELECTRO_GENRES]):
                 export_path = self.export_general_path / file.parent.parent.name / file.parent.name
                 export_path.mkdir(parents=True, exist_ok=True)
@@ -172,7 +172,7 @@ class MusicImportDaemon:
                         audio_file = audio_format(str(files[0]))
                         id3_data["album"] = audio_file["album"][0]
                         logger.info(f"Converting album {id3_data['album']}.")
-                        id3_data["genre"] = audio_file.get("genre", [""])[0]
+                        id3_data["genre"] = " ".join(audio_file.get("genre", []))
                         id3_data["albumartist"] = self._compile_album_artists(files=files)
                         id3_data = self._get_id3_from_beatport(files=files, id3_data=id3_data)
                         export_path = self._create_export_path(id3_data)
