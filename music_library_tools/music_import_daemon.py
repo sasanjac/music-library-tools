@@ -125,6 +125,8 @@ class MusicImportDaemon:
                 albums = [id3_data["album"].upper(), utils.replace_all(id3_data["album"])]
                 albumartists = [id3_data["albumartist"].upper(), utils.replace_all(id3_data["albumartist"].upper())]
                 labels = [id3_data["label"].upper(), utils.replace_all(id3_data["label"].upper())]
+                print(bp_labels)
+                print(labels)
                 if (
                     any(i in bp_albums for i in albums)
                     and any(i in bp_albumartists for i in albumartists)
