@@ -105,12 +105,14 @@ class MusicImportDaemon:
         return rv
 
     def _get_id3_from_beatport(self, files: List[Path], id3_data: Dict[str, str]):
+        logger.info("here")
         req_str = self._create_request(files=files, id3_data=id3_data)
         try:
             ids = requests.get(req_str).text.split('href="/release/')[1:]
             ids = [i.split('"')[0] for i in ids]
             ids = list(set(ids))
             for id in ids:
+                logger.info(f"{id}")
                 r = requests.get("https://www.beatport.com/release/" + id)
                 rdata = utils.split_from_to(r.text, ['<script type="application/ld+json">'], "</script>")
                 data = json.loads(rdata)
