@@ -173,6 +173,7 @@ class MusicImportDaemon:
             logger.info("Importing albums for artist %s: %s", art_dir.name, ", ".join([e.name for e in album_dirs]))
             try:
                 for d in album_dirs:
+                    logger.info("Importing album %s", d)
                     id3_data = {}
                     try:
                         files = self._prepare_files(dir=d)
@@ -193,7 +194,7 @@ class MusicImportDaemon:
                         utils.delete_dir(d)
                         logger.info(f"Finished Converting album {id3_data['album']}.")
                     except ValueError as e:
-                        logger.exception(e)
+                        logger.error(e)
                         continue
             except Exception as e:
                 logger.exception(e)
