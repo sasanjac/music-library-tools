@@ -118,6 +118,7 @@ class MusicImportDaemon:
                 data = json.loads(rdata)
                 data = [d for d in data if d["@type"] == "MusicRelease"]
                 data = data[0]
+                logger.info(f"{data}")
                 bp_album = data["name"]
                 bp_albumartist = data["@producer"][0]["name"]
                 bp_label = data["recordLabel"]["name"]
