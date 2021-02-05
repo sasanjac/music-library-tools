@@ -1,6 +1,0 @@
-{
-    "python.pythonPath": "/Users/sasanrasti/Downloads/Temp/music-library-tools/.venv/bin/python3",
-    "python.linting.mypyEnabled": true,
-    "python.formatting.provider": "black",
-    "python.testing.pytestEnabled": true
-}

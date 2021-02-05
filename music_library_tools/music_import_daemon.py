@@ -91,6 +91,19 @@ class MusicImportDaemon:
             req_year = ""
         return f"https://www.beatport.com/search?q={req_album}+{req_artist}+{req_year}"
 
+    def _create_label_tag(self, files: List[Path]) -> str:
+        audio_format = utils.get_audio_format(file=files[0])
+        audio_file = audio_format(str(files[0]))
+        try:
+            rv = audio_file["organization"]
+        except Exception:
+            try:
+                rv = audio_file["publisher"]
+            except Exception:
+                logger.exception("Can't determine label.")
+                rv = ""
+        return rv
+
     def _get_id3_from_beatport(self, files: List[Path], id3_data: Dict[str, str]):
         req_str = self._create_request(files=files, id3_data=id3_data)
         try:
@@ -99,17 +112,24 @@ class MusicImportDaemon:
             ids = list(set(ids))
             for id in ids:
                 r = requests.get("https://www.beatport.com/release/" + id)
-                rdata = utils.split_from_to(r.text, ["<script type=\"application/ld+json\">"], "</script>")
+                rdata = utils.split_from_to(r.text, ['<script type="application/ld+json">'], "</script>")
                 data = json.loads(rdata)
                 data = [d for d in data if d["@type"] == "MusicRelease"]
                 data = data[0]
                 bp_album = data["name"]
                 bp_albumartist = data["@producer"][0]["name"]
+                bp_label = data["recordLabel"]["name"]
                 bp_albums = [bp_album.upper(), utils.replace_all(bp_album.upper())]
-                albums = [id3_data["album"].upper(), utils.replace_all(id3_data["album"])]
                 bp_albumartists = [bp_albumartist.upper(), utils.replace_all(bp_albumartist.upper())]
+                bp_labels = [bp_label.upper(), utils.replace_all(bp_label.upper())]
+                albums = [id3_data["album"].upper(), utils.replace_all(id3_data["album"])]
                 albumartists = [id3_data["albumartist"].upper(), utils.replace_all(id3_data["albumartist"].upper())]
-                if any(i in bp_albums for i in albums) and any(i in bp_albumartists for i in albumartists):
+                labels = [id3_data["label"].upper(), utils.replace_all(id3_data["label"].upper())]
+                if (
+                    any(i in bp_albums for i in albums)
+                    and any(i in bp_albumartists for i in albumartists)
+                    and any(i in bp_labels for i in labels)
+                ):
                     isrc_str = data["catalogNumber"]
                     try:
                         isrc = re.split(r"(\d+)", isrc_str)[:3]
@@ -143,13 +163,7 @@ class MusicImportDaemon:
         audio_file["isrc"] = id3_data["isrc"]
         audio_file["album"] = id3_data["isrc"] + " - " + audio_file["album"][0]
         audio_file["genre"] = id3_data["genre"]
-        try:
-            audio_file["label"] = audio_file["organization"]
-        except Exception:
-            try:
-                audio_file["label"] = audio_file["publisher"]
-            except Exception:
-                logger.exception("Can't create tag label")
+        audio_file["label"] = id3_data["label"]
 
         title = audio_file["title"][0]
         # Add Original Mix if no already there
@@ -186,6 +200,7 @@ class MusicImportDaemon:
                         logger.info(f"        Importing album {id3_data['album']} ...")
                         id3_data["genre"] = " ".join(audio_file.get("genre", []))
                         id3_data["albumartist"] = self._compile_album_artists(files=files)
+                        id3_data["label"] = self._create_label_tag(files=files)
                         id3_data = self._get_id3_from_beatport(files=files, id3_data=id3_data)
                         export_path = self._create_export_path(id3_data)
                         for f in files:
