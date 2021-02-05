@@ -193,7 +193,7 @@ class MusicImportDaemon:
                             utils.export_file(file=f, export_path=export_path)
                         (d / "cover.jpg").unlink()
                         utils.delete_dir(d)
-                        logger.info(f"        Importing {id3_data['album']} completed.")
+                        logger.info(f"        Importing album {id3_data['album']} completed.")
                     except ValueError as e:
                         logger.error(e)
                         continue
