@@ -127,7 +127,6 @@ class MusicImportDaemon:
                 labels = [id3_data["label"].upper(), utils.replace_all(id3_data["label"].upper())]
                 logger.info(f"{bp_labels}")
                 logger.info(f"{labels}")
-                logger.info("dsfsdg")
                 if (
                     any(i in bp_albums for i in albums)
                     and any(i in bp_albumartists for i in albumartists)
@@ -203,8 +202,12 @@ class MusicImportDaemon:
                         logger.info(f"        Importing album {id3_data['album']} ...")
                         id3_data["genre"] = " ".join(audio_file.get("genre", []))
                         id3_data["albumartist"] = self._compile_album_artists(files=files)
+                        logger.info("creating label")
                         id3_data["label"] = self._create_label_tag(files=files)
+                        logger.info(id3_data["label"])
+                        logger.info("reqqing bp")
                         id3_data = self._get_id3_from_beatport(files=files, id3_data=id3_data)
+                        logger.info("creating expo path")
                         export_path = self._create_export_path(id3_data)
                         for f in files:
                             self._finalize_file(file=f, id3_data=id3_data)
