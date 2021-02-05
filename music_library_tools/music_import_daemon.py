@@ -127,6 +127,7 @@ class MusicImportDaemon:
                 labels = [id3_data["label"].upper(), utils.replace_all(id3_data["label"].upper())]
                 logger.info(f"{bp_labels}")
                 logger.info(f"{labels}")
+                logger.info("dsfsdg")
                 if (
                     any(i in bp_albums for i in albums)
                     and any(i in bp_albumartists for i in albumartists)
