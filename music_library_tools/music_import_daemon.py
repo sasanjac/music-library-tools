@@ -1,3 +1,4 @@
+import json
 import logging
 import re
 import shutil
@@ -5,9 +6,11 @@ import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
-from music_library_tools import utils
+
 import requests
 from pathvalidate import sanitize_filepath
+
+from music_library_tools import utils
 
 logger = logging.getLogger()
 
@@ -96,11 +99,18 @@ class MusicImportDaemon:
             ids = list(set(ids))
             for id in ids:
                 r = requests.get("https://www.beatport.com/release/" + id)
-                bp_album = utils.split_from_to(r.text, ['"og:title" content="'], " von")
+                rdata = utils.split_from_to(r.text, ["<script type=\"application/ld+json\">"], "</script>")
+                data = json.loads(rdata)
+                data = [d for d in data if d["@type"] == "MusicRelease"]
+                data = data[0]
+                bp_album = data["name"]
+                bp_albumartist = data["@producer"][0]["name"]
                 bp_albums = [bp_album.upper(), utils.replace_all(bp_album.upper())]
-                albums = [id3_data["album"].upper(), utils.replace_all(id3_data["album"].upper())]
-                if any(i in bp_albums for i in albums):
-                    isrc_str = utils.split_from_to(r.text, ['"catalog": "'], '"')
+                albums = [id3_data["album"].upper(), utils.replace_all(id3_data["album"])]
+                bp_albumartists = [bp_albumartist.upper(), utils.replace_all(bp_albumartist.upper())]
+                albumartists = [id3_data["albumartist"].upper(), utils.replace_all(id3_data["albumartist"].upper())]
+                if any(i in bp_albums for i in albums) and any(i in bp_albumartists for i in albumartists):
+                    isrc_str = data["catalogNumber"]
                     try:
                         isrc = re.split(r"(\d+)", isrc_str)[:3]
                         if isrc[2] in ["DIG", "CD", "DIGITAL"]:
