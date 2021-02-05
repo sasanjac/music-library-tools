@@ -53,7 +53,7 @@ class MusicImportDaemon:
                 export_path = self.export_general_path / file.parent.parent.name / file.parent.name
                 export_path.mkdir(parents=True, exist_ok=True)
                 shutil.move(str(file.parent), str(export_path))
-                raise ValueError("Album is general Music.")
+                raise ValueError("Album is moved to general music.")
         except KeyError:
             pass
 
@@ -166,14 +166,14 @@ class MusicImportDaemon:
         audio_file.save()
 
     def import_music(self):
-        logger.info("Starting Music Import")
+        logger.info("Importing music ...")
         artist_dirs = [d for d in self.import_path.iterdir() if d.is_dir()]
         for art_dir in artist_dirs:
             album_dirs = [d for d in art_dir.iterdir() if d.is_dir()]
-            logger.info("Importing albums for artist %s: %s", art_dir.name, ", ".join([e.name for e in album_dirs]))
+            logger.info(f"    Importing albums for artist {art_dir.name} ...")
             try:
                 for d in album_dirs:
-                    logger.info("Importing album %s", d)
+                    logger.info(f"        Checking files for album {d.name} ...")
                     id3_data = {}
                     try:
                         files = self._prepare_files(dir=d)
@@ -182,7 +182,8 @@ class MusicImportDaemon:
                         audio_format = utils.get_audio_format(files[0])
                         audio_file = audio_format(str(files[0]))
                         id3_data["album"] = audio_file["album"][0]
-                        logger.info(f"Converting album {id3_data['album']}.")
+                        logger.info(f"        File check completed for album {id3_data['album']}.")
+                        logger.info(f"        Importing album {id3_data['album']} ...")
                         id3_data["genre"] = " ".join(audio_file.get("genre", []))
                         id3_data["albumartist"] = self._compile_album_artists(files=files)
                         id3_data = self._get_id3_from_beatport(files=files, id3_data=id3_data)
@@ -192,11 +193,12 @@ class MusicImportDaemon:
                             utils.export_file(file=f, export_path=export_path)
                         (d / "cover.jpg").unlink()
                         utils.delete_dir(d)
-                        logger.info(f"Finished Converting album {id3_data['album']}.")
+                        logger.info(f"        Importing {id3_data['album']} completed.")
                     except ValueError as e:
                         logger.error(e)
                         continue
             except Exception as e:
                 logger.exception(e)
+            logger.info(f"    Importing albums for artist {art_dir.name} completed.")
             utils.delete_dir(art_dir)
-        logger.info("Completed Music Conversion successfully")
+        logger.info("Importing music completed.")
