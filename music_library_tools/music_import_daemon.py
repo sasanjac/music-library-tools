@@ -182,7 +182,7 @@ class MusicImportDaemon:
                         audio_format = utils.get_audio_format(files[0])
                         audio_file = audio_format(str(files[0]))
                         id3_data["album"] = audio_file["album"][0]
-                        logger.info(f"        File check completed for album {id3_data['album']}.")
+                        logger.info(f"        Checking files for album {id3_data['album']} completed.")
                         logger.info(f"        Importing album {id3_data['album']} ...")
                         id3_data["genre"] = " ".join(audio_file.get("genre", []))
                         id3_data["albumartist"] = self._compile_album_artists(files=files)
