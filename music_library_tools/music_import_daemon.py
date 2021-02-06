@@ -105,32 +105,26 @@ class MusicImportDaemon:
         return rv
 
     def _get_id3_from_beatport(self, files: List[Path], id3_data: Dict[str, str]):
-        logger.info("here")
         req_str = self._create_request(files=files, id3_data=id3_data)
         try:
             ids = requests.get(req_str).text.split('href="/release/')[1:]
             ids = [i.split('"')[0] for i in ids]
             ids = list(set(ids))
             for id in ids:
-                logger.info(f"{id}")
                 r = requests.get("https://www.beatport.com/release/" + id)
                 rdata = utils.split_from_to(r.text, ['<script type="application/ld+json">'], "</script>")
                 data = json.loads(rdata)
                 data = [d for d in data if d["@type"] == "MusicRelease"]
                 data = data[0]
-                logger.info(f"{data}")
                 bp_album = data["name"]
                 bp_albumartist = data["@producer"][0]["name"]
                 bp_label = data["recordLabel"]["name"]
-                logger.info(f"{bp_label}")
                 bp_albums = [bp_album.upper(), utils.replace_all(bp_album.upper())]
                 bp_albumartists = [bp_albumartist.upper(), utils.replace_all(bp_albumartist.upper())]
                 bp_labels = [bp_label.upper(), utils.replace_all(bp_label.upper())]
                 albums = [id3_data["album"].upper(), utils.replace_all(id3_data["album"])]
                 albumartists = [id3_data["albumartist"].upper(), utils.replace_all(id3_data["albumartist"].upper())]
                 labels = [id3_data["label"][0].upper(), utils.replace_all(id3_data["label"][0].upper())]
-                logger.info(f"{bp_labels}")
-                logger.info(f"{labels}")
                 if (
                     any(i in bp_albums for i in albums)
                     and any(i in bp_albumartists for i in albumartists)
@@ -206,12 +200,8 @@ class MusicImportDaemon:
                         logger.info(f"        Importing album {id3_data['album']} ...")
                         id3_data["genre"] = " ".join(audio_file.get("genre", []))
                         id3_data["albumartist"] = self._compile_album_artists(files=files)
-                        logger.info("creating label")
                         id3_data["label"] = self._create_label_tag(files=files)
-                        logger.info(id3_data["label"])
-                        logger.info("reqqing bp")
                         id3_data = self._get_id3_from_beatport(files=files, id3_data=id3_data)
-                        logger.info("creating expo path")
                         export_path = self._create_export_path(id3_data)
                         for f in files:
                             self._finalize_file(file=f, id3_data=id3_data)
