@@ -128,7 +128,7 @@ class MusicImportDaemon:
                 bp_labels = [bp_label.upper(), utils.replace_all(bp_label.upper())]
                 albums = [id3_data["album"].upper(), utils.replace_all(id3_data["album"])]
                 albumartists = [id3_data["albumartist"].upper(), utils.replace_all(id3_data["albumartist"].upper())]
-                labels = [id3_data["label"].upper(), utils.replace_all(id3_data["label"].upper())]
+                labels = [id3_data["label"][0].upper(), utils.replace_all(id3_data["label"][0].upper())]
                 logger.info(f"{bp_labels}")
                 logger.info(f"{labels}")
                 if (
