@@ -138,7 +138,7 @@ class MusicImportDaemon:
                         id3_data["isrc"] = "".join(isrc)
                     except Exception:
                         id3_data["isrc"] = isrc_str
-                    id3_data["genre"] = utils.split_from_to(r.text, ['"genres":', '"name": "'], '"')
+                    id3_data["genre"] = utils.split_from_to(r.text, ['data-ec-d3="'], '">').replace("&amp;", "&")
                     return id3_data
             raise IndexError
         except Exception:
