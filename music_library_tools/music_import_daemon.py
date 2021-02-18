@@ -162,7 +162,7 @@ class MusicImportDaemon:
         audio_file = audio_format(str(file))
         audio_file["isrc"] = id3_data["isrc"]
         audio_file["album"] = id3_data["isrc"] + " - " + audio_file["album"][0]
-        audio_file["genre"] = id3_data["genre"]
+        audio_file["genre"] = id3_data["genre"].replace("/", "-")
         audio_file["label"] = id3_data["label"]
 
         title = audio_file["title"][0]
