@@ -120,7 +120,7 @@ class MusicImportDaemon:
                 bp_albumartist = data["@producer"][0]["name"]
                 bp_label = data["recordLabel"]["name"]
                 bp_albums = [bp_album.upper(), utils.replace_all(bp_album.upper())]
-                bp_albumartists = [bp_albumartist.upper(), utils.replace_all(bp_albumartist.upper())]
+                bp_albumartists = [a.upper() for a in bp_albumartist] + [utils.replace_all(a.upper()) for a in bp_albumartist]
                 bp_labels = [bp_label.upper(), utils.replace_all(bp_label.upper())]
                 albums = [id3_data["album"].upper(), utils.replace_all(id3_data["album"])]
                 albumartists = [id3_data["albumartist"].upper(), utils.replace_all(id3_data["albumartist"].upper())]
