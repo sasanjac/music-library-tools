@@ -221,7 +221,7 @@ class MusicImportDaemon:
                         utils.delete_dir(d)
                         logger.info(f"        Importing album {id3_data['album']} completed.")
                     except ValueError as e:
-                        logger.error(e)
+                        logger.exception(e)
                         continue
             except Exception as e:
                 logger.exception(e)
