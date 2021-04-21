@@ -110,6 +110,18 @@ class MusicImportDaemon:
             ids = requests.get(req_str).text.split('href="/release/')[1:]
             ids = [i.split('"')[0] for i in ids]
             ids = list(set(ids))
+            album = id3_data["album"].upper()
+            albums = [album, utils.replace_all(album)]
+            albumartist = id3_data["albumartist"].upper()
+            albumartists = [albumartist, utils.replace_all(albumartist)]
+            label = id3_data["label"][0].upper()
+            labels = [label, utils.replace_all(label)]
+            if albumartists == "Various Artists":
+                audio_format = utils.get_audio_format(files[0])
+                audio_file = audio_format(str(files[0]))
+                albumartists = audio_file["artist"][0]
+            logger.info(f"Looking for {albumartist}: {album} by {label}")
+            logger.info("Beatport returned")
             for id in ids:
                 r = requests.get("https://www.beatport.com/release/" + id)
                 rdata = utils.split_from_to(r.text, ['<script type="application/ld+json">'], "</script>")
@@ -122,13 +134,7 @@ class MusicImportDaemon:
                 bp_albums = [bp_album.upper(), utils.replace_all(bp_album.upper())]
                 bp_albumartists = [a.upper() for a in bp_albumartist] + [utils.replace_all(a.upper()) for a in bp_albumartist]
                 bp_labels = [bp_label.upper(), utils.replace_all(bp_label.upper())]
-                albums = [id3_data["album"].upper(), utils.replace_all(id3_data["album"])]
-                albumartists = [id3_data["albumartist"].upper(), utils.replace_all(id3_data["albumartist"].upper())]
-                labels = [id3_data["label"][0].upper(), utils.replace_all(id3_data["label"][0].upper())]
-                if albumartists == "Various Artists":
-                    audio_format = utils.get_audio_format(files[0])
-                    audio_file = audio_format(str(files[0]))
-                    albumartists = audio_file["artist"][0]
+                logger.info(f"Looking for {bp_albumartist}: {bp_album} by {bp_label}")
                 conditions = (
                     any(i in bp_albums for i in albums)
                     and any(i in bp_labels for i in labels)
