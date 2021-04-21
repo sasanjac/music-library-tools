@@ -121,8 +121,6 @@ class MusicImportDaemon:
             albumartists = [albumartist, utils.replace_all(albumartist)]
             label = id3_data["label"][0].upper()
             labels = [label, utils.replace_all(label)]
-            logger.info(f"Looking for {albumartist}: {album} by {label}")
-            logger.info("Beatport returned")
             for id in ids:
                 r = requests.get("https://www.beatport.com/release/" + id)
                 rdata = utils.split_from_to(r.text, ['<script type="application/ld+json">'], "</script>")
@@ -135,7 +133,6 @@ class MusicImportDaemon:
                 bp_albums = [bp_album.upper(), utils.replace_all(bp_album.upper())]
                 bp_albumartists = [a.upper() for a in bp_albumartist] + [utils.replace_all(a.upper()) for a in bp_albumartist]
                 bp_labels = [bp_label.upper(), utils.replace_all(bp_label.upper())]
-                logger.info(f"{bp_albumartist}: {bp_album} by {bp_label}")
                 conditions = (
                     any(i in bp_albums for i in albums)
                     and any(i in bp_labels for i in labels)
