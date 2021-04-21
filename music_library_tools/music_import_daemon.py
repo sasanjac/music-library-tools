@@ -113,13 +113,13 @@ class MusicImportDaemon:
             album = id3_data["album"].upper()
             albums = [album, utils.replace_all(album)]
             albumartist = id3_data["albumartist"].upper()
+            if albumartist == "VARIOUS ARTISTS":
+                audio_format = utils.get_audio_format(files[0])
+                audio_file = audio_format(str(files[0]))
+                albumartists = audio_file["artist"][0].upper()
             albumartists = [albumartist, utils.replace_all(albumartist)]
             label = id3_data["label"][0].upper()
             labels = [label, utils.replace_all(label)]
-            if albumartists == "Various Artists":
-                audio_format = utils.get_audio_format(files[0])
-                audio_file = audio_format(str(files[0]))
-                albumartists = audio_file["artist"][0]
             logger.info(f"Looking for {albumartist}: {album} by {label}")
             logger.info("Beatport returned")
             for id in ids:
