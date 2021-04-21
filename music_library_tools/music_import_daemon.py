@@ -6,6 +6,7 @@ import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
+from mutagen.easyid3 import EasyID3KeyError
 
 import requests
 from pathvalidate import sanitize_filepath
@@ -174,7 +175,10 @@ class MusicImportDaemon:
         audio_file["isrc"] = id3_data["isrc"]
         audio_file["album"] = id3_data["isrc"] + " - " + audio_file["album"][0]
         audio_file["genre"] = id3_data["genre"].replace("/", "-")
-        audio_file["label"] = id3_data["label"]
+        try:
+            audio_file["label"] = id3_data["label"]
+        except EasyID3KeyError:
+            audio_file["organization"] = id3_data["label"]
 
         title = audio_file["title"][0]
         # Add Original Mix if no already there
