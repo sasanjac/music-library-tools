@@ -81,7 +81,7 @@ class MusicImportDaemon:
         audio_file = audio_format(str(files[0]))
         req_album = urllib.parse.quote_plus(id3_data["album"])
         if id3_data["albumartist"] == "Various Artists":
-            req_artist = ""
+            req_artist = audio_file["artist"][0]
         else:
             req_artist = urllib.parse.quote_plus(id3_data["albumartist"])
 
@@ -117,7 +117,7 @@ class MusicImportDaemon:
                 data = [d for d in data if d["@type"] == "MusicRelease"]
                 data = data[0]
                 bp_album = data["name"]
-                bp_albumartist = data["@producer"][0]["name"]
+                bp_albumartist = [x["name"] for x in data["@producer"]]
                 bp_label = data["recordLabel"]["name"]
                 bp_albums = [bp_album.upper(), utils.replace_all(bp_album.upper())]
                 bp_albumartists = [a.upper() for a in bp_albumartist] + [utils.replace_all(a.upper()) for a in bp_albumartist]
@@ -125,11 +125,16 @@ class MusicImportDaemon:
                 albums = [id3_data["album"].upper(), utils.replace_all(id3_data["album"])]
                 albumartists = [id3_data["albumartist"].upper(), utils.replace_all(id3_data["albumartist"].upper())]
                 labels = [id3_data["label"][0].upper(), utils.replace_all(id3_data["label"][0].upper())]
-                if (
+                if albumartists == "Various Artists":
+                    audio_format = utils.get_audio_format(files[0])
+                    audio_file = audio_format(str(files[0]))
+                    albumartists = audio_file["artist"][0]
+                conditions = (
                     any(i in bp_albums for i in albums)
-                    and any(i in bp_albumartists for i in albumartists)
                     and any(i in bp_labels for i in labels)
-                ):
+                    and any(i in bp_albumartists for i in albumartists)
+                )
+                if conditions:
                     isrc_str = data["catalogNumber"]
                     try:
                         isrc = re.split(r"(\d+)", isrc_str)[:3]
