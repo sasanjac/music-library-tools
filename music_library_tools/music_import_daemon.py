@@ -1,19 +1,20 @@
 import json
-import logging
 import re
 import shutil
+import sys
 import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
-from mutagen.easyid3 import EasyID3KeyError
 
 import requests
+from loguru import logger
+from mutagen.easyid3 import EasyID3KeyError
 from pathvalidate import sanitize_filepath
 
 from music_library_tools import utils
 
-logger = logging.getLogger()
+logger.add(sys.stdout, colorize=True)
 
 ELECTRO_GENRES = ["TECHNO", "HOUSE", "ELECTRO", "DANCE"]
 

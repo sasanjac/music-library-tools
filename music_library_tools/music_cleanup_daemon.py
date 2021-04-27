@@ -1,13 +1,15 @@
-import logging
 import shutil
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from loguru import logger
 from pathvalidate import sanitize_filepath
 from tinytag import TinyTag
+
 from music_library_tools import utils
 
-logger = logging.getLogger()
+logger.add(sys.stdout, colorize=True)
 
 
 @dataclass
@@ -58,7 +60,10 @@ class MusicCleanupDaemon:
                     file_output_dir = self.export_path / album_artist.replace("/", "_") / album.replace("/", "_")
                     file_export_path = file_output_dir / f"{int(track):02d} {title.replace('/', '_')}{f.suffix}"
 
-                    output_file = sanitize_filepath(file_export_path, platform="linux",)
+                    output_file = sanitize_filepath(
+                        file_export_path,
+                        platform="linux",
+                    )
 
                     logger.info("Correcting file %s to %s", f, output_file)
                     file_output_dir.mkdir(parents=True, exist_ok=True)
