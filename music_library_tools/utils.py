@@ -78,7 +78,7 @@ def sanitize_file_path(p: Path) -> Path:
     base = str(p.parent / p.stem)
     base = ud.normalize("NFKD", base).encode("ascii", "ignore").decode("utf-8")
     base = base.replace(":", "_").replace(".", "")
-    return Path(base)
+    return Path(base + p.suffix)
 
 
 AudioError = MutagenError
