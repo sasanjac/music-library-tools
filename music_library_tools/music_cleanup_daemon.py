@@ -43,10 +43,13 @@ class MusicCleanupDaemon:
                             continue
 
                         album = tag.album
+                        if album is None:
+                            logger.error(f"Album tag is None for {alb_dir}")
+                            break
 
                         try:
-                            isrc, *album = album.split(" - ")
-                            album = " - ".join(album)
+                            isrc, *rest = album.split(" - ")
+                            album = " - ".join(rest)
                         except Exception:
                             logger.info(f"Can't split album for {album}")
                             isrc = "TODO"
@@ -57,7 +60,14 @@ class MusicCleanupDaemon:
                             continue
 
                         title = tag.title
+                        if title is None:
+                            logger.error(f"Title tag is None for {alb_dir}")
+                            break
+
                         track = tag.track
+                        if track is None:
+                            logger.error(f"Track tag is None for {alb_dir}")
+                            break
 
                         album = f"{isrc} - {album}"
 
@@ -72,7 +82,7 @@ class MusicCleanupDaemon:
                     logger.info(f"Corrected album {alb_dir}")
                     utils.delete_dir(alb_dir)
                 except Exception:
-                    logger.error(f"Exception in program while processing {alb_dir}: e")
+                    logger.exception(f"Exception in program while processing album {alb_dir}")
 
             artist_dirs = [d for d in self.todo_path.iterdir() if d.is_dir()]
             for art_dir in artist_dirs:

@@ -10,7 +10,6 @@ for art_dir in artist_dirs:
     for d in album_dirs:
         files = [f for f in d.iterdir() if (f.suffix == ".flac" or f.suffix == ".mp3")]
         for f in files:
-            audio_format = utils.get_audio_format(f)
-            audio_file = audio_format(str(f))
+            audio_file = utils.Audio(f)
             audio_file["genre"] = audio_file["genre"][0].replace("/", "-")
             audio_file.save()

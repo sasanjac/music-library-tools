@@ -12,7 +12,7 @@ from music_library_tools.music_import_daemon import MusicImportDaemon
 from music_library_tools.plex_daemon import PlexDaemon
 
 logger.remove()
-logger.add(sys.stderr, colorize=True, format="<level>{message}</level>")
+logger.add(sys.stderr, colorize=True, format="<level>{message}</level>")  # noqa
 
 import_path = Path("/data/import")
 todo_path = Path("/data/todo")

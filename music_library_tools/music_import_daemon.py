@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import re
-import unicodedata as ud
 import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
@@ -242,8 +241,8 @@ class MusicImportDaemon:
                             logger.info(f"Importing album {id3_data.album} completed.")
                         except ValueError as e:
                             logger.error(e)
-                except Exception as e:
-                    logger.exception(e)
+                except Exception:
+                    logger.exception(f"Exception in program while processing artist {art_dir}")
                 logger.info(f"Importing albums for artist {art_dir.name} completed.")
                 utils.delete_dir(art_dir)
             logger.info("Importing music completed.")
