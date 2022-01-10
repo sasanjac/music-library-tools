@@ -74,9 +74,10 @@ class MusicCleanupDaemon:
                         file_output_dir = self.export_path / album_artist.replace("/", "_") / album.replace("/", "_")
                         file_export_path = file_output_dir / f"{int(track):02d} {title.replace('/', '_')}{f.suffix}"
 
+                        output_dir = utils.sanitize_file_path(file_output_dir)
                         output_file = utils.sanitize_file_path(file_export_path)
 
-                        file_output_dir.mkdir(parents=True, exist_ok=True)
+                        output_dir.mkdir(parents=True, exist_ok=True)
                         shutil.move(f, output_file)
 
                     logger.info(f"Corrected album {alb_dir}")
