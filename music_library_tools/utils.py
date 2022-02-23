@@ -43,6 +43,7 @@ class Exporter:
 
     def __post_init__(self) -> None:
         logger.debug(f"Creating output dir: {self.export_path}")
+        self.export_path = sanitize_file_path(self.export_path)
         self.export_path.mkdir(parents=True, exist_ok=True)
 
     def export(self, file: Path) -> None:
