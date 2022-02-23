@@ -60,6 +60,7 @@ class MusicImportDaemon:
         try:
             genres = [" ".join(utils.Audio(f)["genre"]).upper() for f in files]
             logger.warning(genres)
+            logger.warning([g in genre for g in ELECTRO_GENRES for genre in genres])
             if not any([g in genre for g in ELECTRO_GENRES for genre in genres]):
                 export_path = self.export_general_path / files[0].parent.parent.name
                 logger.warning(export_path)
