@@ -59,7 +59,7 @@ class MusicImportDaemon:
     def _filter_general_music(self, files: List[Path]) -> None:
         try:
             genres = [" ".join(utils.Audio(f)["genre"]).upper() for f in files]
-            if not any([g in genre for g in ELECTRO_GENRES for genre in genres]) or not any(g == "" for g in genres):
+            if not any([g in genre for g in ELECTRO_GENRES for genre in genres]):
                 export_path = self.export_general_path / files[0].parent.parent.name
                 exporter = utils.Exporter(export_path)
                 exporter.export(files[0].parent, f=False)
@@ -236,7 +236,7 @@ class MusicImportDaemon:
                             exporter = utils.Exporter(export_path)
                             for f in files:
                                 self._finalize_file(file=f, id3_data=id3_data)
-                                exporter.export(f)
+                                exporter.export(f, f=True)
                             utils.delete_dir(d)
                             logger.info(f"Importing album {id3_data.album} completed.")
                         except ValueError as e:
