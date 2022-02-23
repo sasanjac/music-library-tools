@@ -76,10 +76,15 @@ def split_from_to(text, froms, to) -> str:
 
 
 def sanitize_file_path(p: Path) -> Path:
-    base = str(p.parent / p.stem)
+    if p.is_file():
+        base = str(p.parent / p.stem)
+    else:
+        base = str(p)
     base = ud.normalize("NFKD", base).encode("ascii", "ignore").decode("utf-8")
     base = base.replace(":", "_").replace(".", "")
-    return Path(base + p.suffix)
+    if p.is_file():
+        base = base + p.suffix
+    return Path(base)
 
 
 AudioError = MutagenError
