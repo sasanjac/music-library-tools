@@ -43,7 +43,7 @@ class Exporter:
 
     def __post_init__(self) -> None:
         logger.debug(f"Creating output dir: {self.export_path}")
-        self.export_path = sanitize_file_path(self.export_path)
+        self.export_path = sanitize_file_path(self.export_path, f=False)
         self.export_path.mkdir(parents=True, exist_ok=True)
 
     def export(self, file: Path) -> None:
@@ -75,14 +75,14 @@ def split_from_to(text, froms, to) -> str:
     return text.split(to)[0]
 
 
-def sanitize_file_path(p: Path) -> Path:
-    if p.is_file():
+def sanitize_file_path(p: Path, f: bool = True) -> Path:
+    if f:
         base = str(p.parent / p.stem)
     else:
         base = str(p)
     base = ud.normalize("NFKD", base).encode("ascii", "ignore").decode("utf-8")
     base = base.replace(":", "_").replace(".", "")
-    if p.is_file():
+    if f:
         base = base + p.suffix
     return Path(base)
 
