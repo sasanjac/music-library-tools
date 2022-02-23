@@ -17,7 +17,7 @@ from mutagen.flac import FLAC
 
 from music_library_tools import utils
 
-ELECTRO_GENRES = ["", "TECHNO", "HOUSE", "ELECTRO", "DANCE"]
+ELECTRO_GENRES = ["TECHNO", "HOUSE", "ELECTRO", "DANCE"]
 
 MIX_STRS = ["MIX", "REMIX", "EDIT", "REWORK", "BOOTLEG", "VERSION", "DUB", "ENACTMENT"]
 
@@ -59,11 +59,8 @@ class MusicImportDaemon:
     def _filter_general_music(self, files: List[Path]) -> None:
         try:
             genres = [" ".join(utils.Audio(f)["genre"]).upper() for f in files]
-            logger.warning(genres)
-            logger.warning([g in genre for g in ELECTRO_GENRES for genre in genres])
-            if not any([g in genre for g in ELECTRO_GENRES for genre in genres]):
+            if not any([g in genre for g in ELECTRO_GENRES for genre in genres]) or not any(g == "" for g in genres):
                 export_path = self.export_general_path / files[0].parent.parent.name
-                logger.warning(export_path)
                 exporter = utils.Exporter(export_path)
                 exporter.export(files[0].parent, f=False)
                 raise ValueError("Album is moved to general music.")
