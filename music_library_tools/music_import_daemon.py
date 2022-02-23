@@ -62,6 +62,7 @@ class MusicImportDaemon:
             logger.warning(genres)
             if not any([g in genre for g in ELECTRO_GENRES for genre in genres]):
                 export_path = self.export_general_path / files[0].parent.parent.name
+                logger.warning(export_path)
                 exporter = utils.Exporter(export_path)
                 exporter.export(files[0].parent, f=False)
                 raise ValueError("Album is moved to general music.")
