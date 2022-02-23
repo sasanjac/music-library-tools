@@ -46,9 +46,9 @@ class Exporter:
         self.export_path = sanitize_file_path(self.export_path, f=False)
         self.export_path.mkdir(parents=True, exist_ok=True)
 
-    def export(self, file: Path) -> None:
+    def export(self, file: Path, f=True) -> None:
         output_file = self.export_path / file.name
-        output_file = sanitize_file_path(output_file)
+        output_file = sanitize_file_path(output_file, f)
         shutil.move(file, output_file)
         output_file.chmod(0o0777)
 
