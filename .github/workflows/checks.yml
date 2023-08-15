@@ -1,0 +1,49 @@
+name: checks
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_call:
+
+jobs:
+  checks:
+    name: Running checks
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+
+    steps:
+      - name: Checking out repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Setting up PDM @ ${{ matrix.python-version }}
+        uses: pdm-project/setup-pdm@v3.3
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: true
+          architecture: x64
+          enable-pep582: true
+        env:
+          PDM_DEPS: "urllib3<2"
+
+      - name: Check lockfile
+        run: pdm lock --check
+
+      - name: Installing dependencies
+        run: pdm install
+
+      - name: Code format checking using black
+        run: pdm run black . --check
+
+      - name: Code checking using ruff
+        run: pdm run ruff .
+
+      - name: Type checking using mypy
+        run: pdm run mypy .

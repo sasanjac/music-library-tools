@@ -1,108 +1,83 @@
 [project]
-name = "music-library-tools"
-version = "0.1.0"
-description = ""
-authors = [{ name = "Sasan Jacob Rasti", email = "sasan.accounts@icloud.com" }]
-dependencies = [
+  authors = [
+    { name = "Sasan Jacob Rasti", email = "sasan.accounts@icloud.com" },
+  ]
+  dependencies = [
+    "deemix",
+    "loguru",
     "mutagen",
+    "plexapi",
     "requests",
     "schedule",
     "tinytag",
-    "loguru",
-    "plexapi",
-]
-requires-python = ">=3.8"
-dynamic = ["classifiers"]
-license = { text = "MIT" }
+  ]
+  description = ""
+  dynamic = ["classifiers"]
+  license = { text = "MIT" }
+  name = "music-library-tools"
+  requires-python = ">=3.8"
+  version = "0.1.0"
 
-[project.urls]
-homepage = "https://github.com/sasanjac/music-library-tools"
+  [project.urls]
+    homepage = "https://github.com/sasanjac/music-library-tools"
 
-[project.optional-dependencies]
+  [project.optional-dependencies]
 
 [build-system]
-requires = ["pdm-pep517"]
-build-backend = "pdm.pep517.api"
+  build-backend = "pdm.pep517.api"
+  requires      = ["pdm-pep517"]
 
 [tool]
-[tool.pdm]
-[tool.pdm.dev-dependencies]
-linter = ["pyproject-flake8", "black", "isort", "mypy"]
-flake8-plugins = [
-    "pyflakes",
-    "pycodestyle",
-    "flake8-type-checking",
-    "flake8-bugbear",
-    "flake8-bandit",
-    "flake8-docstrings",
-    "flake8-isort",
-    "flake8-absolute-import",
-    "flake8-use-fstring",
-    "flake8-pep3101",
-    "flake8-comprehensions",
-    "flake8-mutable",
-    "flake8-annotations-complexity",
-    "flake8-annotations-coverage",
-    "flake8-annotations",
-    "flake8-alfred",
-]
-test = ["pytest", "pytest-cov", "pytest-xdist"]
-prototype = ["ipykernel"]
 
-[tool.black]
-line-length = 120
+  [tool.pdm]
 
-[tool.flake8]
-ignore = [
-    "W0622",
+    [tool.pdm.dev-dependencies]
+      formatting = ["black"]
+      linter     = ["ruff"]
+      typing     = ["mypy"]
+
+[tool.ruff]
+  extend-exclude = ["tests"]
+  ignore = [
+    "ANN002",
+    "ANN003",
+    "ANN101",
+    "ANN102",
+    "C901",
     "D100",
+    "D101",
+    "D102",
+    "D103",
     "D104",
+    "D105",
+    "D106",
     "D107",
     "D202",
     "D203",
     "D401",
-    "W503",
-    "E203",
     "E402",
     "E501",
-    "ANN101",
-    "ANN102",
-]
-exclude = [".tox", "build", "tests", "__pypackages__"]
-max-line-complexity = 21
-inline-quotes = "double"
-max-line-length = 120
-docstring-convention = "google"
+  ]
+  line-length = 120
+  select = ["ALL"]
 
-[tool.isort]
-combine_as_imports = true
-force_grid_wrap = 0
-include_trailing_comma = true
-known_first_party = "tests"
-line_length = 120
-multi_line_output = 3
-skip = [".tox", "build"]
-force_single_line = true
+  [tool.ruff.isort]
+    force-single-line = true
+
+  [tool.ruff.pydocstyle]
+    convention = "pep257"
+
+[tool.black]
+  line_length = 120
 
 [tool.mypy]
-follow_imports = "skip"
-ignore_missing_imports = false
-strict_optional = true
-warn_no_return = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = "test_*.py"
-addopts = "-ra --strict -p pytester"
-
-[tool.coverage.run]
-branch = true
-omit = ["tests/*", ".venv/*", "__pypackages__/*"]
-
-[tool.coverage.report]
-show_missing = true
+  follow_imports         = "normal"
+  ignore_missing_imports = true
+  namespace_packages     = true
+  strict_optional        = true
+  warn_no_return         = true
+  warn_redundant_casts   = true
+  warn_unused_ignores    = true
 
 [tool.pyright]
-exclude = ["**/node_modules", "**/__pycache__"]
+  exclude = ["**/__pycache__"]

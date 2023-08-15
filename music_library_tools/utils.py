@@ -49,7 +49,7 @@ class Exporter:
     def export(self, file: Path, f=True) -> None:
         output_file = self.export_path / file.name
         output_file = sanitize_file_path(output_file, f)
-        shutil.move(file, output_file)
+        shutil.move(str(file), str(output_file))
         output_file.chmod(0o0777)
 
 
