@@ -1,91 +1,102 @@
+from __future__ import annotations
+
+import contextlib
 import shutil
+import typing as t
 from dataclasses import dataclass
-from pathlib import Path
 
 from loguru import logger
 from tinytag import TinyTag
 
 from music_library_tools import utils
 
+if t.TYPE_CHECKING:
+    import pathlib
+
 
 @dataclass
 class MusicCleanupDaemon:
-    todo_path: Path
-    export_path: Path
+    todo_path: pathlib.Path
+    export_path: pathlib.Path
 
     def cleanup_music(self) -> None:
-        album_dirs = [f for d in self.todo_path.iterdir() if d.is_dir() for f in d.iterdir() if f.is_dir()]
-        if len(album_dirs) > 0:
+        album_paths = [f for d in self.todo_path.iterdir() if d.is_dir() for f in d.iterdir() if f.is_dir()]
+        if len(album_paths) > 0:
             logger.info("Starting Music Cleanup")
-            logger.info(f"Processing {len(album_dirs)} albums")
+            logger.info(f"Processing {len(album_paths)} albums")
 
-            for alb_dir in album_dirs:
-                try:
-                    logger.info(f"Checking {alb_dir}")
-                    try:
-                        alb_dir.rmdir()
-                    except OSError:
-                        pass
-                    files = [f for f in alb_dir.iterdir() if f.suffix in [".flac", ".mp3"]]
-                    if len(files) == 0:
-                        logger.info(f"{alb_dir} is empty")
-                    next_album = False
-                    for f in files:
-                        if next_album:
-                            continue
-
-                        tag = TinyTag.get(alb_dir / f)
-
-                        album_artist = tag.albumartist
-                        if album_artist is None:
-                            logger.info(f"{alb_dir} does not have an album artist")
-                            next_album = True
-                            continue
-
-                        album = tag.album
-                        if album is None:
-                            logger.error(f"Album tag is None for {alb_dir}")
-                            break
-
-                        try:
-                            isrc, *rest = album.split(" - ")
-                            album = " - ".join(rest)
-                        except Exception:
-                            logger.info(f"Can't split album for {album}")
-                            isrc = "TODO"
-
-                        if isrc == "TODO":
-                            logger.info(f"ISCR must be set first for {alb_dir}")
-                            next_album = True
-                            continue
-
-                        title = tag.title
-                        if title is None:
-                            logger.error(f"Title tag is None for {alb_dir}")
-                            break
-
-                        track = tag.track
-                        if track is None:
-                            logger.error(f"Track tag is None for {alb_dir}")
-                            break
-
-                        album = f"{isrc} - {album}"
-
-                        file_output_dir = self.export_path / album_artist.replace("/", "_") / album.replace("/", "_")
-                        file_export_path = file_output_dir / f"{int(track):02d} {title.replace('/', '_')}{f.suffix}"
-
-                        output_dir = utils.sanitize_file_path(file_output_dir, f=False)
-                        output_file = utils.sanitize_file_path(file_export_path)
-
-                        output_dir.mkdir(parents=True, exist_ok=True)
-                        shutil.move(f, output_file)
-
-                    logger.info(f"Corrected album {alb_dir}")
-                    utils.delete_dir(alb_dir)
-                except Exception:
-                    logger.exception(f"Exception in program while processing album {alb_dir}")
+            for album_path in album_paths:
+                self.cleanup_album(album_path=album_path)
 
             artist_dirs = [d for d in self.todo_path.iterdir() if d.is_dir()]
             for art_dir in artist_dirs:
-                utils.delete_dir(art_dir)
+                utils.safe_delete_path(art_dir)
             logger.info("Completed Music Cleanup successfully")
+
+    def cleanup_album(self, album_path: pathlib.Path) -> None:
+        try:
+            self._cleanup_album(album_path)
+        except Exception:
+            logger.exception(f"Exception in program while processing album {album_path}")
+
+    def _cleanup_album(self, album_path: pathlib.Path) -> None:
+        logger.info(f"Checking {album_path}")
+        with contextlib.suppress(OSError):
+            album_path.rmdir()
+
+        files = [f for f in album_path.iterdir() if f.suffix in [".flac", ".mp3"]]
+        if len(files) == 0:
+            logger.info(f"{album_path} is empty")
+        next_album = False
+        for f in files:
+            if next_album:
+                continue
+
+            tag = TinyTag.get(album_path / f)
+
+            album_artist = tag.albumartist
+            if album_artist is None:
+                logger.info(f"{album_path} does not have an album artist")
+                next_album = True
+                continue
+
+            album = tag.album
+            if album is None:
+                logger.error(f"Album tag is None for {album_path}")
+                break
+
+            try:
+                isrc, *rest = album.split(" - ")
+                album = " - ".join(rest)
+            except Exception:
+                logger.info(f"Can't split album for {album}")
+                isrc = "TODO"
+
+            if isrc == "TODO":
+                logger.info(f"ISCR must be set first for {album_path}")
+                next_album = True
+                continue
+
+            title = tag.title
+            if title is None:
+                logger.error(f"Title tag is None for {album_path}")
+                break
+
+            track = tag.track
+            if track is None:
+                logger.error(f"Track tag is None for {album_path}")
+                break
+
+            album = f"{isrc} - {album}"
+
+            file_output_dir = self.export_path / album_artist.replace("/", "_") / album.replace("/", "_")
+            file_export_path = file_output_dir / f"{int(track):02d} {title.replace('/', '_')}{f.suffix}"
+
+            output_dir = utils.sanitize_file_path(file_output_dir, file_only=False)
+            output_file = utils.sanitize_file_path(file_export_path)
+
+            output_dir.mkdir(parents=True, exist_ok=True)
+            shutil.move(f, output_file)
+
+        logger.info(f"Corrected album {album_path}")
+        utils.safe_delete_path(album_path)

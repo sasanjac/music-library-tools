@@ -15,7 +15,7 @@
   dynamic = ["classifiers"]
   license = { text = "MIT" }
   name = "music-library-tools"
-  requires-python = ">=3.8"
+  requires-python = ">=3.11"
   version = "0.1.0"
 
   [project.urls]
@@ -34,7 +34,7 @@
     [tool.pdm.dev-dependencies]
       formatting = ["black"]
       linter     = ["ruff"]
-      typing     = ["mypy"]
+      typing     = ["mypy", "types-requests"]
 
 [tool.ruff]
   extend-exclude = ["tests"]
@@ -43,6 +43,7 @@
     "ANN003",
     "ANN101",
     "ANN102",
+    "BLE001",
     "C901",
     "D100",
     "D101",
