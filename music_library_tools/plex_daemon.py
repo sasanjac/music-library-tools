@@ -22,7 +22,7 @@ class PlexDaemon:
 
     def __post_init__(self) -> None:
         self.server = pserv.PlexServer(self.plex_url, self.token)
-        self.collection = self.server.library.sectionByID(7)
+        self.collection = self.server.library.sectionByID(1)
 
     def check_and_fix_duplicates(self) -> None:
         albums = self.collection.albums()
