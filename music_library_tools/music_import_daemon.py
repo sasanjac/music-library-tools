@@ -66,9 +66,12 @@ class MusicImportDaemon:
         try:
             genres = [" ".join(utils.audio(f)["genre"]).upper() for f in files]
             if not any(g in genre for g in ELECTRO_GENRES for genre in genres):
-                export_path = self.export_general_path / files[0].parent.parent.name
+                export_path = self.export_general_path / files[0].parent.parent.name / files[0].parent.name
                 exporter = utils.Exporter(export_path)
-                exporter.export(files[0].parent, file_only=False)
+                for f in files[0].parent.iterdir():
+                    if f.is_file():
+                        exporter.export(f, file_only=True)
+
                 msg = "Album is moved to general music."
                 raise ValueError(msg)
         except KeyError:
