@@ -53,14 +53,13 @@ class PlexDaemon:
                 except utils.AudioError as e:
                     logger.error(e)
                     continue
-                try:
+
+                if "label" in x and len(x["label"] > 0):
                     label = x["label"][0]
-                except KeyError:
-                    try:
-                        label = x["publisher"][0]
-                    except KeyError:
-                        with contextlib.suppress(KeyError):
-                            label = x["organization"][0]
+                elif "publisher" in x and len(x["publisher"] > 0):
+                    label = x["publisher"][0]
+                else:
+                    label = x["organization"][0]
 
                 logger.info(f"Updating label {label} for album {alb.title}.")
                 alb.edit(**{"studio.value": label})
