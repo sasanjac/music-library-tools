@@ -144,54 +144,33 @@ class MusicImportDaemon:
     def _get_id3_from_beatport(self, files: Sequence[pathlib.Path], id3_data: ID3Data) -> ID3Data:
         req_str = self._create_request(files=files, id3_data=id3_data)
         try:
-            return self._handle_id3_beatport_request(req_str=req_str, files=files, id3_data=id3_data)
+            return self._handle_id3_beatport_request(req_str=req_str, id3_data=id3_data)
         except Exception:
             id3_data.isrc = "TODO"
             return id3_data
 
-    def _handle_id3_beatport_request(self, req_str: str, files: Sequence[pathlib.Path], id3_data: ID3Data) -> ID3Data:
-        ids = requests.get(req_str, timeout=120).text.split('href="/release/')[1:]
-        ids = [i.split('"')[0] for i in ids]
-        ids = list(set(ids))
-        album = id3_data.album.upper()
-        albums = [album, utils.replace_all(album)]
-        albumartist = id3_data.albumartist.upper()
-        if albumartist == "VARIOUS ARTISTS":
-            audio_file = utils.audio(files[0])
-            albumartist = audio_file["artist"][0].split(",")[0].upper()
-        albumartists = [albumartist, utils.replace_all(albumartist)]
-        label = id3_data.label.split()[0].upper()
-        labels = [label, utils.replace_all(label)]
-        for idx in ids:
-            r = requests.get("https://www.beatport.com/release/" + idx, timeout=120)
-            rdata = utils.split_from_to(r.text, ['<script type="application/ld+json">'], "</script>")
-            data = json.loads(rdata)
-            data = [d for d in data if d["@type"] == "MusicRelease"]
-            data = data[0]
-            bp_album = data["name"]
-            bp_albumartist = [x["name"] for x in data["@producer"]]
-            bp_label = data["recordLabel"]["name"].split()[0]
-            bp_albums = [bp_album.upper(), utils.replace_all(bp_album.upper())]
-            bp_albumartists = [a.upper() for a in bp_albumartist] + [
-                utils.replace_all(a.upper()) for a in bp_albumartist
-            ]
-            bp_labels = [bp_label.upper(), utils.replace_all(bp_label.upper())]
-            conditions = (
-                any(i in bp_albums for i in albums)
-                and any(i in bp_labels for i in labels)
-                and any(i in bp_albumartists for i in albumartists)
-            )
-            if conditions:
-                isrc_str = data["catalogNumber"]
-                try:
-                    isrc = re.split(r"(\d+)", isrc_str)[:3]
-                    if isrc[2] in ["DIG", "CD", "DIGITAL"]:
-                        isrc[2] = ""
-                    id3_data.isrc = "".join(isrc)
-                except Exception:
-                    id3_data.isrc = isrc_str
-                id3_data.genre = utils.split_from_to(r.text, ['data-ec-d3="'], '">').replace("&amp;", "&")
-                return id3_data
+    def _handle_id3_beatport_request(self, req_str: str, id3_data: ID3Data) -> ID3Data:
+        data = (
+            requests.get(req_str, timeout=120)
+            .text.split('<script id="__NEXT_DATA__" type="application/json">')[1]
+            .split("</script>")[0]
+        )
+        data_json = json.loads(data)
+        if len(data_json) > 0:
+            max_score = max(e["score"] for e in data_json)
+            entry = next(e for e in data_json if e["score"] == max_score)
+            isrc_str = entry["catalog_number"]
+            try:
+                isrc = re.split(r"(\d+)", isrc_str)[:3]
+                if isrc[2] in ["DIG", "CD", "DIGITAL"]:
+                    isrc[2] = ""
+                id3_data.isrc = "".join(isrc)
+            except Exception:
+                id3_data.isrc = isrc_str
+
+            genres = [e["genre_name"] for e in entry["genre"]]
+            id3_data.genre = max(set(genres), key=genres.count)
+            return id3_data
 
         msg = "Could not get ID3 data."
         raise IndexError(msg)

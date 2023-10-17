@@ -34,6 +34,7 @@
     [tool.pdm.dev-dependencies]
       formatting = ["black"]
       linter     = ["ruff"]
+      protoyping = ["ipykernel"]
       typing     = ["mypy", "types-requests"]
 
 [tool.ruff]
