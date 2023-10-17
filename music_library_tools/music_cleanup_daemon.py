@@ -73,7 +73,7 @@ class MusicCleanupDaemon:
                 isrc = "TODO"
 
             if isrc == "TODO":
-                logger.info(f"ISCR must be set first for {album_path}")
+                logger.warning(f"ISCR must be set first for {album_path}")
                 next_album = True
                 continue
 
@@ -95,6 +95,7 @@ class MusicCleanupDaemon:
             output_dir = utils.sanitize_file_path(file_output_dir, file_only=False)
             output_file = utils.sanitize_file_path(file_export_path)
 
+            logger.info(f"Creating directory for {output_dir}")
             output_dir.mkdir(parents=True, exist_ok=True)
             shutil.move(f, output_file)
 
