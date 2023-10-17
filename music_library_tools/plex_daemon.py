@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import contextlib
 import pathlib
 from collections import Counter
 from dataclasses import dataclass

@@ -46,14 +46,17 @@ class MusicImportDaemon:
         if any(f.suffix == ".temp" for f in files):
             msg = "Album not finished downloading."
             raise ValueError(msg)
+
         if any(["errors.txt" in files]):
             with (path / "errors.txt").open() as f:
                 file_contents = f.read()
                 raise ValueError(file_contents)
+
         files = [f for f in files if (f.suffix in {".flac", ".mp3"})]
         if len(files) == 0:
             msg = "No files in album."
             raise ValueError(msg)
+
         return files
 
     def _check_track_numbers(self, files: Sequence[pathlib.Path]) -> None:
@@ -86,6 +89,7 @@ class MusicImportDaemon:
         else:
             msg = "Audio files have different albums as tags"
             raise ValueError(msg)
+
         genres = [" ".join(utils.audio(f).get("genre", [])) for f in files]
         genre = mode(genres)
         albumartist = self._compile_album_artists(files=files)
@@ -121,6 +125,7 @@ class MusicImportDaemon:
             except Exception:
                 logger.exception("Can't determine label.")
                 labels = [""]
+
         if len(set(labels)) == 1:
             return labels[0]
 
@@ -139,13 +144,14 @@ class MusicImportDaemon:
             req_year = audio_file["year"][0].split("-")[0]
         except Exception:
             req_year = ""
+
         return f"https://www.beatport.com/search?q={req_album}+{req_artist}+{req_year}"
 
     def _get_id3_from_beatport(self, files: Sequence[pathlib.Path], id3_data: ID3Data) -> ID3Data:
         req_str = self._create_request(files=files, id3_data=id3_data)
         try:
             return self._handle_id3_beatport_request(req_str=req_str, id3_data=id3_data)
-        except Exception:
+        except IndexError:
             id3_data.isrc = "TODO"
             return id3_data
 
@@ -199,6 +205,7 @@ class MusicImportDaemon:
             audio_file["label"] = id3_data.label
         except EasyID3KeyError:
             audio_file["organization"] = id3_data.label
+
         return audio_file
 
     def _fix_title(self, audio_file: FLAC | EasyID3) -> FLAC | EasyID3:
@@ -206,6 +213,7 @@ class MusicImportDaemon:
         # Add Original Mix if no already there
         if not any(mix_str in title.upper() for mix_str in MIX_STRS):
             title += " (Original Mix)"
+
         # Capitalize Remix, etc.
         splits = title.split(" ")
         splits[-1] = splits[-1].capitalize()
@@ -235,12 +243,16 @@ class MusicImportDaemon:
                             for f in files:
                                 self._finalize_file(file=f, id3_data=id3_data)
                                 exporter.export(f, file_only=True)
+
                             utils.safe_delete_path(d)
                             logger.info(f"Importing album {id3_data.album} completed.")
                         except ValueError as e:
                             logger.error(e)
+
                 except Exception:
                     logger.exception(f"Exception in program while processing artist {art_dir}")
+
                 logger.info(f"Importing albums for artist {art_dir.name} completed.")
                 utils.safe_delete_path(art_dir)
+
             logger.info("Importing music completed.")
