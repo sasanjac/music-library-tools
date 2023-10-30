@@ -166,6 +166,7 @@ class MusicImportDaemon:
             .split("</script>")[0]
         )
         data_json = json.loads(data)
+        data_json = data_json["props"]["pageProps"]["dehydratedState"]["queries"][0]["state"]["data"]["tracks"]["data"]
         if len(data_json) > 0:
             max_score = max(e["score"] for e in data_json)
             entry = next(e for e in data_json if e["score"] == max_score)
