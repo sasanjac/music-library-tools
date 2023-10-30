@@ -24,6 +24,10 @@ ELECTRO_GENRES = ["TECHNO", "HOUSE", "ELECTRO", "DANCE"]
 
 MIX_STRS = ["MIX", "REMIX", "EDIT", "REWORK", "BOOTLEG", "VERSION", "DUB", "ENACTMENT"]
 
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36",
+}
+
 
 @dataclass
 class ID3Data:
@@ -157,7 +161,7 @@ class MusicImportDaemon:
 
     def _handle_id3_beatport_request(self, req_str: str, id3_data: ID3Data) -> ID3Data:
         data = (
-            requests.get(req_str, timeout=120)
+            requests.get(req_str, headers=HEADERS, timeout=120)
             .text.split('<script id="__NEXT_DATA__" type="application/json">')[1]
             .split("</script>")[0]
         )
