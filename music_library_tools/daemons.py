@@ -39,6 +39,8 @@ class MIDHandler(we.FileSystemEventHandler):
                 if len(files) > 0 and (int(files[-1].name.split(" - ")[0]) == len(files)):
                     self._mid.import_album(album_path=src_path)
 
+                return
+
             logger.error(f"{src_path!s} can not be imported. Missing files.")
 
 
