@@ -40,7 +40,7 @@ class MIDHandler(we.FileSystemEventHandler):
                 for _ in range(12):
                     if int(files[-1].name.split(" - ")[0]) == len(files):
                         self._mid.import_album(album_path=src_path)
-                        if len(src_path.parent.iterdir()) == 0:
+                        if len(list(src_path.parent.iterdir())) == 0:
                             utils.safe_delete_path(src_path.parent)
                         return
 
