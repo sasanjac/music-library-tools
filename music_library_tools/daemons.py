@@ -33,14 +33,18 @@ class MIDHandler(we.FileSystemEventHandler):
     def on_created(self, event: we.DirCreatedEvent | we.FileCreatedEvent) -> None:
         src_path = pathlib.Path(event.src_path)
         if event.is_directory and src_path.exists():
-            for _ in range(6):
-                time.sleep(5)
-                files = [f for f in src_path.iterdir() if f.suffix == ".flac"]
-                if len(files) > 0 and (int(files[-1].name.split(" - ")[0]) == len(files)):
-                    self._mid.import_album(album_path=src_path)
-                    return
+            time.sleep(15)
+            files = [f for f in src_path.iterdir() if f.suffix == ".flac"]
+            if len(files) > 0:
+                for _ in range(6):
+                    if int(files[-1].name.split(" - ")[0]) == len(files):
+                        self._mid.import_album(album_path=src_path)
+                        return
 
-            logger.error(f"{src_path!s} can not be imported. Missing files.")
+                    time.sleep(5)
+                    files = [f for f in src_path.iterdir() if f.suffix == ".flac"]
+
+                logger.error(f"{src_path!s} can not be imported. Missing files.")
 
 
 class MCDHandler(we.FileSystemEventHandler):
