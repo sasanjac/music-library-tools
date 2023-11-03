@@ -36,10 +36,10 @@ class MIDHandler(we.FileSystemEventHandler):
         if event.is_directory and src_path.exists():
             time.sleep(15)
             files = [f for f in src_path.iterdir() if f.suffix == ".flac"]
-            logger.info(files)
             if len(files) > 0:
                 for _ in range(12):
-                    if int(files[-1].name.split(" - ")[0]) == len(files):
+                    n_files = max(int(f.name.split(" - ")[0]) for f in files)
+                    if n_files == len(files):
                         self._mid.import_album(album_path=src_path)
                         if len(list(src_path.parent.iterdir())) == 0:
                             utils.safe_delete_path(src_path.parent)
@@ -47,7 +47,6 @@ class MIDHandler(we.FileSystemEventHandler):
 
                     time.sleep(5)
                     files = [f for f in src_path.iterdir() if f.suffix == ".flac"]
-                    logger.info(files)
 
                 logger.error(f"{src_path!s} can not be imported. Missing files.")
 
