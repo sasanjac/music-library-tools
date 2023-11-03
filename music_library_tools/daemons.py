@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 
 import schedule
+import watchdog
 from loguru import logger
 
 from music_library_tools.music_cleanup_daemon import MusicCleanupDaemon
@@ -24,6 +25,32 @@ plex_url = os.environ["PLEX_URL"]
 token = os.environ["PLEX_TOKEN"]
 base_path = "/data/export_electro"
 
+
+class MIDHandler(watchdog.events.FileSystemEventHandler):
+    def __init__(self, mid: MusicImportDaemon) -> None:
+        self._mid = mid
+
+    def on_created(self, event: watchdog.events.DirCreatedEvent | watchdog.events.FileCreatedEvent) -> None:
+        if event.is_directory and event.src_path.exists():
+            for _ in range(6):
+                time.sleep(5)
+                files = [f for f in event.src_path.iterdir() if f.suffix == ".flac"]
+                if len(files) > 0 and (int(files[-1].name.split(" - ")[0]) == len(files)):
+                    self._mid.import_album(album_path=event.src_path)
+
+            logger.error(f"{event.src_path!s} can not be imported. Missing files.")
+
+
+class MCDHandler(watchdog.events.FileSystemEventHandler):
+    def __init__(self, mcd: MusicCleanupDaemon) -> None:
+        self._mcd = mcd
+
+    def on_modified(self, event: watchdog.events.FileModifiedEvent | watchdog.events.DirModifiedEvent) -> None:
+        if not self.is_directory and event.src_path.parent.exists():
+            time.sleep(5)
+            self._mcd.cleanup_album(album_path=event.src_path.parent)
+
+
 mid = MusicImportDaemon(
     import_path=import_path,
     todo_path=todo_path,
@@ -32,7 +59,10 @@ mid = MusicImportDaemon(
 )
 
 mid.import_music()
-schedule.every(5).minutes.do(mid.import_music)
+mid_observer = watchdog.Observer()
+mid_handler = MIDHandler(mid=mid)
+mid_observer.schedule(mid_handler, import_path, recursive=True)
+mid_observer.start()
 
 mcd = MusicCleanupDaemon(
     todo_path=todo_path,
@@ -40,19 +70,19 @@ mcd = MusicCleanupDaemon(
 )
 
 mcd.cleanup_music()
-schedule.every(5).minutes.do(mcd.cleanup_music)
+mcd_observer = watchdog.Observer()
+mcd_handler = MCDHandler(mcd=mcd)
+mcd_observer.schedule(mcd_handler, todo_path, recursive=True)
+mcd_observer.start()
 
-pd = PlexDaemon(
-    plex_url=plex_url,
-    token=token,
-    base_path=base_path,
-)
 
-pd.check_and_fix_duplicates()
-schedule.every(24).hours.do(pd.check_and_fix_duplicates)
-pd.update_labels()
-schedule.every(24).hours.do(pd.update_labels)
+try:
+    while True:
+        schedule.run_pending()
+        time.sleep(10)
+except KeyboardInterrupt:
+    mid_observer.stop()
+    mcd_observer.stop()
 
-while True:
-    schedule.run_pending()
-    time.sleep(10)
+mid_observer.join()
+mcd_observer.join()

@@ -73,14 +73,14 @@ class MusicImportDaemon:
         try:
             genres = [" ".join(utils.audio(f)["genre"]).upper() for f in files]
             if not any(g in genre for g in ELECTRO_GENRES for genre in genres):
-                alb_dir = files[0].parent
-                export_path = self.export_general_path / alb_dir.parent.name / alb_dir.name
+                album_path = files[0].parent
+                export_path = self.export_general_path / album_path.parent.name / album_path.name
                 exporter = utils.Exporter(export_path)
-                for f in alb_dir.iterdir():
+                for f in album_path.iterdir():
                     if f.is_file():
                         exporter.export(f, file_only=True)
 
-                utils.safe_delete_path(alb_dir)
+                utils.safe_delete_path(album_path)
                 msg = "Album is moved to general music."
                 raise ValueError(msg)
         except KeyError:
@@ -228,31 +228,14 @@ class MusicImportDaemon:
         return audio_file
 
     def import_music(self) -> None:
-        artist_dirs = [d for d in self.import_path.iterdir() if d.is_dir()]
-        if len(artist_dirs) > 0:
-            for art_dir in artist_dirs:
-                album_dirs = [d for d in art_dir.iterdir() if d.is_dir()]
+        artist_paths = [d for d in self.import_path.iterdir() if d.is_dir()]
+        if len(artist_paths) > 0:
+            for art_dir in artist_paths:
+                album_paths = [d for d in art_dir.iterdir() if d.is_dir()]
                 logger.info(f"Importing albums for artist {art_dir.name} ...")
                 try:
-                    for d in album_dirs:
-                        logger.info(f"Checking files for album {d.name} ...")
-                        try:
-                            files = self._prepare_files(d)
-                            self._filter_general_music(files)
-                            self._check_track_numbers(files)
-                            logger.info(f"Compiling ID3 data for album {d.name} ...")
-                            id3_data = self._compile_id3_data(files)
-                            logger.info(f"Importing album {d.name} ...")
-                            export_path = self._create_export_path(id3_data)
-                            exporter = utils.Exporter(export_path)
-                            for f in files:
-                                self._finalize_file(file=f, id3_data=id3_data)
-                                exporter.export(f, file_only=True)
-
-                            utils.safe_delete_path(d)
-                            logger.info(f"Importing album {id3_data.album} completed.")
-                        except ValueError as e:
-                            logger.error(e)
+                    for d in album_paths:
+                        self.import_album(album_path=d)
 
                 except Exception:
                     logger.exception(f"Exception in program while processing artist {art_dir}")
@@ -261,3 +244,23 @@ class MusicImportDaemon:
                 utils.safe_delete_path(art_dir)
 
             logger.info("Importing music completed.")
+
+    def import_album(self, album_path: pathlib.Path) -> None:
+        logger.info(f"Checking files for album {album_path.name} ...")
+        try:
+            files = self._prepare_files(album_path)
+            self._filter_general_music(files)
+            self._check_track_numbers(files)
+            logger.info(f"Compiling ID3 data for album {album_path.name} ...")
+            id3_data = self._compile_id3_data(files)
+            logger.info(f"Importing album {album_path.name} ...")
+            export_path = self._create_export_path(id3_data)
+            exporter = utils.Exporter(export_path)
+            for f in files:
+                self._finalize_file(file=f, id3_data=id3_data)
+                exporter.export(f, file_only=True)
+
+            utils.safe_delete_path(album_path)
+            logger.info(f"Importing album {id3_data.album} completed.")
+        except ValueError as e:
+            logger.error(e)
