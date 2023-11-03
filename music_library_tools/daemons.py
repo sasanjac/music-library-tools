@@ -7,12 +7,12 @@ import time
 from pathlib import Path
 
 import schedule
-import watchdog
+import watchdog.events as we
+import watchdog.observers as wo
 from loguru import logger
 
 from music_library_tools.music_cleanup_daemon import MusicCleanupDaemon
 from music_library_tools.music_import_daemon import MusicImportDaemon
-from music_library_tools.plex_daemon import PlexDaemon
 
 logger.remove()
 logger.add(sys.stderr, colorize=True, format="<level>{message}</level>")
@@ -26,11 +26,11 @@ token = os.environ["PLEX_TOKEN"]
 base_path = "/data/export_electro"
 
 
-class MIDHandler(watchdog.events.FileSystemEventHandler):
+class MIDHandler(we.FileSystemEventHandler):
     def __init__(self, mid: MusicImportDaemon) -> None:
         self._mid = mid
 
-    def on_created(self, event: watchdog.events.DirCreatedEvent | watchdog.events.FileCreatedEvent) -> None:
+    def on_created(self, event: we.DirCreatedEvent | we.FileCreatedEvent) -> None:
         if event.is_directory and event.src_path.exists():
             for _ in range(6):
                 time.sleep(5)
@@ -41,11 +41,11 @@ class MIDHandler(watchdog.events.FileSystemEventHandler):
             logger.error(f"{event.src_path!s} can not be imported. Missing files.")
 
 
-class MCDHandler(watchdog.events.FileSystemEventHandler):
+class MCDHandler(we.FileSystemEventHandler):
     def __init__(self, mcd: MusicCleanupDaemon) -> None:
         self._mcd = mcd
 
-    def on_modified(self, event: watchdog.events.FileModifiedEvent | watchdog.events.DirModifiedEvent) -> None:
+    def on_modified(self, event: we.FileModifiedEvent | we.DirModifiedEvent) -> None:
         if not self.is_directory and event.src_path.parent.exists():
             time.sleep(5)
             self._mcd.cleanup_album(album_path=event.src_path.parent)
@@ -59,7 +59,7 @@ mid = MusicImportDaemon(
 )
 
 mid.import_music()
-mid_observer = watchdog.Observer()
+mid_observer = wo.Observer()
 mid_handler = MIDHandler(mid=mid)
 mid_observer.schedule(mid_handler, import_path, recursive=True)
 mid_observer.start()
@@ -70,7 +70,7 @@ mcd = MusicCleanupDaemon(
 )
 
 mcd.cleanup_music()
-mcd_observer = watchdog.Observer()
+mcd_observer = wo.Observer()
 mcd_handler = MCDHandler(mcd=mcd)
 mcd_observer.schedule(mcd_handler, todo_path, recursive=True)
 mcd_observer.start()
