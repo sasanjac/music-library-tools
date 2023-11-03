@@ -39,7 +39,7 @@ class MIDHandler(we.FileSystemEventHandler):
             if len(files) > 0:
                 for _ in range(6):
                     if int(files[-1].name.split(" - ")[0]) == len(files):
-                        self._mid.import_album(album_path=src_path, delete_artist_path=True)
+                        self._mid.import_album(album_path=src_path)
                         if len(src_path.parent.iterdir()) == 0:
                             utils.safe_delete_path(src_path.parent)
                         return
@@ -56,7 +56,7 @@ class MCDHandler(we.FileSystemEventHandler):
 
     def on_modified(self, event: we.FileModifiedEvent | we.DirModifiedEvent) -> None:
         src_path = pathlib.Path(event.src_path)
-        if not self.is_directory and src_path.parent.exists():
+        if not event.is_directory and src_path.parent.exists():
             time.sleep(5)
             self._mcd.cleanup_album(album_path=src_path.parent)
 
