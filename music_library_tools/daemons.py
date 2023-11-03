@@ -11,6 +11,7 @@ import watchdog.events as we
 import watchdog.observers as wo
 from loguru import logger
 
+from music_library_tools import utils
 from music_library_tools.music_cleanup_daemon import MusicCleanupDaemon
 from music_library_tools.music_import_daemon import MusicImportDaemon
 
@@ -38,7 +39,9 @@ class MIDHandler(we.FileSystemEventHandler):
             if len(files) > 0:
                 for _ in range(6):
                     if int(files[-1].name.split(" - ")[0]) == len(files):
-                        self._mid.import_album(album_path=src_path)
+                        self._mid.import_album(album_path=src_path, delete_artist_path=True)
+                        if len(src_path.parent.iterdir()) == 0:
+                            utils.safe_delete_path(src_path.parent)
                         return
 
                     time.sleep(5)
