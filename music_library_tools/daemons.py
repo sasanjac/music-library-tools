@@ -36,6 +36,7 @@ class MIDHandler(we.FileSystemEventHandler):
         if event.is_directory and src_path.exists():
             time.sleep(15)
             files = [f for f in src_path.iterdir() if f.suffix == ".flac"]
+            logger.info(files)
             if len(files) > 0:
                 for _ in range(12):
                     if int(files[-1].name.split(" - ")[0]) == len(files):
@@ -46,6 +47,7 @@ class MIDHandler(we.FileSystemEventHandler):
 
                     time.sleep(5)
                     files = [f for f in src_path.iterdir() if f.suffix == ".flac"]
+                    logger.info(files)
 
                 logger.error(f"{src_path!s} can not be imported. Missing files.")
 
