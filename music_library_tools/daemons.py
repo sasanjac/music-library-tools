@@ -34,21 +34,22 @@ class MIDHandler(we.FileSystemEventHandler):
     def on_created(self, event: we.DirCreatedEvent | we.FileCreatedEvent) -> None:
         src_path = pathlib.Path(event.src_path)
         if event.is_directory and src_path.exists():
-            time.sleep(15)
-            files = [f for f in src_path.iterdir() if f.suffix == ".flac"]
-            if len(files) > 0:
-                for _ in range(12):
-                    n_files = max(int(f.name.split(" - ")[0]) for f in files)
-                    if n_files == len(files):
-                        self._mid.import_album(album_path=src_path)
-                        if len(list(src_path.parent.iterdir())) == 0:
-                            utils.safe_delete_path(src_path.parent)
-                        return
+            for _ in range(20):
+                time.sleep(1)
+                files = [f for f in src_path.iterdir() if f.suffix == ".flac"]
+                if len(files) > 0:
+                    for _ in range(12):
+                        n_files = max(int(f.name.split(" - ")[0]) for f in files)
+                        if n_files == len(files):
+                            self._mid.import_album(album_path=src_path)
+                            if len(list(src_path.parent.iterdir())) == 0:
+                                utils.safe_delete_path(src_path.parent)
+                            return
 
-                    time.sleep(5)
-                    files = [f for f in src_path.iterdir() if f.suffix == ".flac"]
+                        time.sleep(5)
+                        files = [f for f in src_path.iterdir() if f.suffix == ".flac"]
 
-                logger.error(f"{src_path!s} can not be imported. Missing files.")
+                    logger.error(f"{src_path!s} can not be imported. Missing files.")
 
 
 class MCDHandler(we.FileSystemEventHandler):
@@ -91,6 +92,7 @@ try:
     while True:
         schedule.run_pending()
         time.sleep(10)
+
 except KeyboardInterrupt:
     mid_observer.stop()
     mcd_observer.stop()

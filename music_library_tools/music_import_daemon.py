@@ -28,6 +28,8 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36",
 }
 
+MIN_SCORE = 1000
+
 
 @dataclass
 class ID3Data:
@@ -170,7 +172,10 @@ class MusicImportDaemon:
         if len(data_json) > 0:
             max_score = max(e["score"] for e in data_json)
             entry = next(e for e in data_json if e["score"] == max_score)
-            logger.info(entry["score"])
+            if entry["score"] <= MIN_SCORE:
+                msg = f"ID3 entry score too low: {entry['score']}"
+                raise IndexError(msg)
+
             isrc_str = entry["catalog_number"]
             try:
                 isrc = re.split(r"(\d+)", isrc_str)[:3]
