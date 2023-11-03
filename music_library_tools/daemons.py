@@ -37,7 +37,7 @@ class MIDHandler(we.FileSystemEventHandler):
             time.sleep(15)
             files = [f for f in src_path.iterdir() if f.suffix == ".flac"]
             if len(files) > 0:
-                for _ in range(6):
+                for _ in range(12):
                     if int(files[-1].name.split(" - ")[0]) == len(files):
                         self._mid.import_album(album_path=src_path)
                         if len(src_path.parent.iterdir()) == 0:
@@ -57,7 +57,7 @@ class MCDHandler(we.FileSystemEventHandler):
     def on_modified(self, event: we.FileModifiedEvent | we.DirModifiedEvent) -> None:
         src_path = pathlib.Path(event.src_path)
         if not event.is_directory and src_path.parent.exists():
-            time.sleep(5)
+            time.sleep(60)
             self._mcd.cleanup_album(album_path=src_path.parent)
 
 
