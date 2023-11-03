@@ -170,6 +170,7 @@ class MusicImportDaemon:
         if len(data_json) > 0:
             max_score = max(e["score"] for e in data_json)
             entry = next(e for e in data_json if e["score"] == max_score)
+            logger.info(entry["score"])
             isrc_str = entry["catalog_number"]
             try:
                 isrc = re.split(r"(\d+)", isrc_str)[:3]
