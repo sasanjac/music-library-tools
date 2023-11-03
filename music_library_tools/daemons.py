@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import os
+import pathlib
 import sys
 import time
-from pathlib import Path
 
 import schedule
 import watchdog.events as we
@@ -17,10 +17,10 @@ from music_library_tools.music_import_daemon import MusicImportDaemon
 logger.remove()
 logger.add(sys.stderr, colorize=True, format="<level>{message}</level>")
 
-import_path = Path("/data/import")
-todo_path = Path("/data/todo")
-export_electro_path = Path("/data/export_electro")
-export_general_path = Path("/data/export_general")
+import_path = pathlib.Path("/data/import")
+todo_path = pathlib.Path("/data/todo")
+export_electro_path = pathlib.Path("/data/export_electro")
+export_general_path = pathlib.Path("/data/export_general")
 plex_url = os.environ["PLEX_URL"]
 token = os.environ["PLEX_TOKEN"]
 base_path = "/data/export_electro"
@@ -31,14 +31,15 @@ class MIDHandler(we.FileSystemEventHandler):
         self._mid = mid
 
     def on_created(self, event: we.DirCreatedEvent | we.FileCreatedEvent) -> None:
-        if event.is_directory and event.src_path.exists():
+        src_path = pathlib.Path(event.src_path)
+        if event.is_directory and src_path.exists():
             for _ in range(6):
                 time.sleep(5)
-                files = [f for f in event.src_path.iterdir() if f.suffix == ".flac"]
+                files = [f for f in src_path.iterdir() if f.suffix == ".flac"]
                 if len(files) > 0 and (int(files[-1].name.split(" - ")[0]) == len(files)):
-                    self._mid.import_album(album_path=event.src_path)
+                    self._mid.import_album(album_path=src_path)
 
-            logger.error(f"{event.src_path!s} can not be imported. Missing files.")
+            logger.error(f"{src_path!s} can not be imported. Missing files.")
 
 
 class MCDHandler(we.FileSystemEventHandler):
@@ -46,9 +47,10 @@ class MCDHandler(we.FileSystemEventHandler):
         self._mcd = mcd
 
     def on_modified(self, event: we.FileModifiedEvent | we.DirModifiedEvent) -> None:
-        if not self.is_directory and event.src_path.parent.exists():
+        src_path = pathlib.Path(event.src_path)
+        if not self.is_directory and src_path.parent.exists():
             time.sleep(5)
-            self._mcd.cleanup_album(album_path=event.src_path.parent)
+            self._mcd.cleanup_album(album_path=src_path.parent)
 
 
 mid = MusicImportDaemon(
