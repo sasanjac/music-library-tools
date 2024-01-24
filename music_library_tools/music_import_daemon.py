@@ -66,7 +66,12 @@ class MusicImportDaemon:
         return files
 
     def _check_track_numbers(self, files: Sequence[pathlib.Path]) -> None:
-        track_nos = [int(utils.audio(f)["tracknumber"][0]) for f in files]
+        try:
+            track_nos = [int(utils.audio(f)["tracknumber"][0]) for f in files]
+        except KeyError as e:
+            msg = "Something wrong with audio file. Probably still downloading."
+            raise ValueError(msg) from e
+
         if max(track_nos) != len(track_nos):
             msg = "Less audio files than tracks in album."
             raise ValueError(msg)
