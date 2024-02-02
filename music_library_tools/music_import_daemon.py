@@ -77,21 +77,23 @@ class MusicImportDaemon:
             raise ValueError(msg)
 
     def _filter_general_music(self, files: Sequence[pathlib.Path]) -> None:
+        nogenre = False
         try:
             genres = [" ".join(utils.audio(f)["genre"]).upper() for f in files]
-            if not any(g in genre for g in ELECTRO_GENRES for genre in genres):
-                album_path = files[0].parent
-                export_path = self.export_general_path / album_path.parent.name / album_path.name
-                exporter = utils.Exporter(export_path)
-                for f in album_path.iterdir():
-                    if f.is_file():
-                        exporter.export(f, file_only=True)
-
-                utils.safe_delete_path(album_path)
-                msg = "Album is moved to general music."
-                raise ValueError(msg)
         except KeyError:
-            pass
+            nogenre = True
+
+        if nogenre or not any(g in genre for g in ELECTRO_GENRES for genre in genres):
+            album_path = files[0].parent
+            export_path = self.export_general_path / album_path.parent.name / album_path.name
+            exporter = utils.Exporter(export_path)
+            for f in album_path.iterdir():
+                if f.is_file():
+                    exporter.export(f, file_only=True)
+
+            utils.safe_delete_path(album_path)
+            msg = "Album is moved to general music."
+            raise ValueError(msg)
 
     def _compile_id3_data(self, files: Sequence[pathlib.Path]) -> ID3Data:
         albums = [utils.audio(f)["album"][0] for f in files]
