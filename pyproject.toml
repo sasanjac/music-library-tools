@@ -10,7 +10,6 @@
     "requests",
     "schedule",
     "tinytag",
-    "watchdog",
   ]
   description = ""
   dynamic = ["classifiers"]
