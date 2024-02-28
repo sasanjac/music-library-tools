@@ -22,8 +22,8 @@ class MusicCleanupDaemon:
     def cleanup_music(self) -> None:
         album_paths = [f for d in self.todo_path.iterdir() if d.is_dir() for f in d.iterdir() if f.is_dir()]
         if len(album_paths) > 0:
-            logger.info("Starting Music Cleanup")
-            logger.info(f"Processing {len(album_paths)} albums")
+            # logger.info("Starting Music Cleanup")
+            # logger.info(f"Processing {len(album_paths)} albums")
 
             for album_path in album_paths:
                 self.cleanup_album(album_path=album_path)
@@ -31,7 +31,7 @@ class MusicCleanupDaemon:
             artist_dirs = [d for d in self.todo_path.iterdir() if d.is_dir()]
             for art_dir in artist_dirs:
                 utils.safe_delete_path(art_dir)
-            logger.info("Completed Music Cleanup successfully")
+            # logger.info("Completed Music Cleanup successfully")
 
     def cleanup_album(self, album_path: pathlib.Path) -> None:
         try:
@@ -40,7 +40,7 @@ class MusicCleanupDaemon:
             logger.exception(f"Exception in program while processing album {album_path}")
 
     def _cleanup_album(self, album_path: pathlib.Path) -> None:
-        logger.info(f"Checking {album_path}")
+        # logger.info(f"Checking {album_path}")
         with contextlib.suppress(OSError):
             album_path.rmdir()
 
@@ -69,7 +69,7 @@ class MusicCleanupDaemon:
                 isrc, *rest = album.split(" - ")
                 album = " - ".join(rest)
             except Exception:
-                logger.info(f"Can't split album for {album}")
+                # logger.info(f"Can't split album for {album}")
                 isrc = "TODO"
 
             if isrc == "TODO":
