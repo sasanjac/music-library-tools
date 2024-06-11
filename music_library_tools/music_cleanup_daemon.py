@@ -31,61 +31,52 @@ class MusicCleanupDaemon:
             artist_dirs = [d for d in self.todo_path.iterdir() if d.is_dir()]
             for art_dir in artist_dirs:
                 utils.safe_delete_path(art_dir)
+
             logger.debug("Completed Music Cleanup successfully")
 
     def cleanup_album(self, album_path: pathlib.Path) -> None:
         try:
             self._cleanup_album(album_path)
-        except Exception:
+        except ValueError:
             logger.exception(f"Exception in program while processing album {album_path}")
 
     def _cleanup_album(self, album_path: pathlib.Path) -> None:
-        logger.debug(f"Checking {album_path}")
         with contextlib.suppress(OSError):
             album_path.rmdir()
 
         files = [f for f in album_path.iterdir() if f.suffix in [".flac", ".mp3"]]
         if len(files) == 0:
             logger.info(f"{album_path} is empty")
-        next_album = False
-        for f in files:
-            if next_album:
-                continue
 
+        for f in files:
             tag = TinyTag.get(album_path / f)
 
             album_artist = tag.albumartist
             if album_artist is None:
                 logger.info(f"{album_path} does not have an album artist")
-                next_album = True
-                continue
+                return
 
             album = tag.album
             if album is None:
                 logger.error(f"Album tag is None for {album_path}")
-                break
+                return
 
-            try:
-                isrc, *rest = album.split(" - ")
-                album = " - ".join(rest)
-            except Exception:
-                logger.exception(f"Can't split album for {album}")
-                isrc = "TODO"
+            isrc, *rest = album.split(" - ")
+            album = " - ".join(rest)
 
             if isrc == "TODO":
                 logger.warning(f"ISCR must be set first for {album_path}")
-                next_album = True
-                continue
+                return
 
             title = tag.title
             if title is None:
                 logger.error(f"Title tag is None for {album_path}")
-                break
+                return
 
             track = tag.track
             if track is None:
                 logger.error(f"Track tag is None for {album_path}")
-                break
+                return
 
             album = f"{isrc} - {album}"
 

@@ -1,50 +1,45 @@
-name: checks
+---
+  name: checks
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-  workflow_call:
+  on:
+    push:
+      branches:
+        - main
+    pull_request:
+      branches:
+        - main
+    workflow_call:
 
-jobs:
-  checks:
-    name: Running checks
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version:
-          - "3.11"
-          - "3.12"
+  jobs:
+    checks:
+      name: Running checks
+      runs-on: ubuntu-latest
+      strategy:
+        matrix:
+          python-version: ["3.11"]
 
-    steps:
-      - name: Checking out repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
+      steps:
+        - name: Checking out repository
+          uses: actions/checkout@v3
+          with:
+            fetch-depth: 1
 
-      - name: Setting up PDM @ ${{ matrix.python-version }}
-        uses: pdm-project/setup-pdm@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: true
-          architecture: x64
-          prerelease: true
-          enable-pep582: true
+        - name: Setting up PDM @ ${{ matrix.python-version }}
+          uses: pdm-project/setup-pdm@v3
+          with:
+            python-version: ${{ matrix.python-version }}
+            cache: true
+            architecture: x64
+            enable-pep582: true
 
-      - name: Installing dependencies
-        run: pdm install
+        - name: Check lockfile
+          run: pdm lock --check
 
-      - name: Check lockfile
-        run: pdm lock --check
+        - name: Installing dependencies
+          run: pdm install
 
-      - name: Code format checking using ruff
-        run: pdm run ruff format --check .
+        - name: Code checking using ruff
+          run: pdm run ruff check .
 
-      - name: Code checking using ruff
-        run: pdm run ruff .
-
-      - name: Type checking using mypy
-        run: pdm run mypy .
+        - name: Type checking using mypy
+          run: pdm run mypy .

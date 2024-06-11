@@ -126,16 +126,16 @@ class MusicImportDaemon:
         audio_file = utils.audio(files[0])
         try:
             return audio_file["albumartist"][0]
-        except Exception:
+        except IndexError:
             return audio_file["artist"][0]
 
     def _create_label_tag(self, files: Sequence[pathlib.Path]) -> str:
         try:
             labels = [utils.audio(f)["organization"][0] for f in files]
-        except Exception:
+        except IndexError:
             try:
                 labels = [utils.audio(f)["publisher"][0] for f in files]
-            except Exception:
+            except IndexError:
                 logger.exception("Can't determine label.")
                 labels = [""]
 
@@ -155,7 +155,7 @@ class MusicImportDaemon:
 
         try:
             req_year = audio_file["year"][0].split("-")[0]
-        except Exception:
+        except IndexError:
             req_year = ""
 
         return f"https://www.beatport.com/search?q={req_album}+{req_artist}+{req_year}"
@@ -189,7 +189,7 @@ class MusicImportDaemon:
                 if isrc[2] in ["DIG", "CD", "DIGITAL"]:
                     isrc[2] = ""
                 id3_data.isrc = "".join(isrc)
-            except Exception:
+            except IndexError:
                 id3_data.isrc = isrc_str
 
             genres = [e["genre_name"] for e in entry["genre"]]
@@ -250,7 +250,7 @@ class MusicImportDaemon:
                     for d in album_paths:
                         self.import_album(album_path=d)
 
-                except Exception:
+                except ValueError:
                     logger.exception(f"Exception in program while processing artist {art_dir}")
 
                 logger.info(f"Importing albums for artist {art_dir.name} completed.")
