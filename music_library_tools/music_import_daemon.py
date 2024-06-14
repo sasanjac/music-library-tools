@@ -126,16 +126,16 @@ class MusicImportDaemon:
         audio_file = utils.audio(files[0])
         try:
             return audio_file["albumartist"][0]
-        except IndexError:
+        except KeyError:
             return audio_file["artist"][0]
 
     def _create_label_tag(self, files: Sequence[pathlib.Path]) -> str:
         try:
             labels = [utils.audio(f)["organization"][0] for f in files]
-        except IndexError:
+        except KeyError:
             try:
                 labels = [utils.audio(f)["publisher"][0] for f in files]
-            except IndexError:
+            except KeyError:
                 logger.exception("Can't determine label.")
                 labels = [""]
 
@@ -155,7 +155,7 @@ class MusicImportDaemon:
 
         try:
             req_year = audio_file["year"][0].split("-")[0]
-        except IndexError:
+        except KeyError:
             req_year = ""
 
         return f"https://www.beatport.com/search?q={req_album}+{req_artist}+{req_year}"
@@ -164,7 +164,7 @@ class MusicImportDaemon:
         req_str = self._create_request(files=files, id3_data=id3_data)
         try:
             return self._handle_id3_beatport_request(req_str=req_str, id3_data=id3_data)
-        except IndexError:
+        except KeyError:
             id3_data.isrc = "TODO"
             return id3_data
 
@@ -181,7 +181,7 @@ class MusicImportDaemon:
             entry = next(e for e in data_json if e["score"] == max_score)
             if entry["score"] <= MIN_SCORE:
                 msg = f"ID3 entry score too low: {entry['score']}"
-                raise IndexError(msg)
+                raise KeyError(msg)
 
             isrc_str = entry["catalog_number"]
             try:
@@ -189,7 +189,7 @@ class MusicImportDaemon:
                 if isrc[2] in ["DIG", "CD", "DIGITAL"]:
                     isrc[2] = ""
                 id3_data.isrc = "".join(isrc)
-            except IndexError:
+            except KeyError:
                 id3_data.isrc = isrc_str
 
             genres = [e["genre_name"] for e in entry["genre"]]
@@ -197,7 +197,7 @@ class MusicImportDaemon:
             return id3_data
 
         msg = "Could not get ID3 data."
-        raise IndexError(msg)
+        raise KeyError(msg)
 
     def _create_export_path(self, id3_data: ID3Data) -> pathlib.Path:
         albumartist = id3_data.albumartist.replace("/", "_")
