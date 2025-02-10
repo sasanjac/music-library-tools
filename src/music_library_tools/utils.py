@@ -1,3 +1,5 @@
+# Copyright (c) 2024-2025 Sasan Jacob Rasti
+
 from __future__ import annotations
 
 import pathlib
@@ -85,7 +87,8 @@ def sanitize_file_path(p: pathlib.Path, *, file_only: bool = True) -> pathlib.Pa
     base = ud.normalize("NFKD", base).encode("ascii", "ignore").decode("utf-8")
     base = base.replace(":", "_").replace(".", "")
     if file_only:
-        base = base + p.suffix
+        base += p.suffix
+
     return pathlib.Path(base)
 
 

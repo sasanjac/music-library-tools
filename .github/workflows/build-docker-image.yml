@@ -1,0 +1,66 @@
+---
+  name: Build docker image
+
+  on:
+    pull_request:
+      branches:
+        - main
+
+    pull_request_target:
+      branches:
+        - main
+
+    workflow_call:
+      outputs:
+        tags:
+          value: ${{ jobs.build-docker-image.outputs.tags }}
+        labels:
+          value: ${{ jobs.build-docker-image.outputs.labels }}
+      secrets:
+        WORKFLOW_ASSISTANT_APP_ID:
+          required: true
+        WORKFLOW_ASSISTANT_PRIVATE_KEY:
+          required: true
+
+  env:
+    REGISTRY: ghcr.io
+    IMAGE_NAME: ${{ github.repository }}
+
+  jobs:
+    build-docker-image:
+      name: Build docker image
+      runs-on: ubuntu-latest
+      if: |
+            (github.event_name == 'pull_request_target' && github.actor == 'dependabot[bot]') ||
+            (github.event_name != 'pull_request_target' && github.actor != 'dependabot[bot]')
+      outputs:
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+      steps:
+        - name: Setup docker buildx
+          uses: docker/setup-buildx-action@v3.8.0
+
+        - name: Extract docker metadata
+          id: meta
+          uses: docker/metadata-action@v5.6.1
+          with:
+            images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+        - name: Get access token
+          id: get_access_token
+          uses: peter-murray/workflow-application-token-action@v4.0.0
+          with:
+            application_id: ${{ secrets.WORKFLOW_ASSISTANT_APP_ID }}
+            application_private_key: ${{ secrets.WORKFLOW_ASSISTANT_PRIVATE_KEY }}
+            revoke_token: true
+
+        - name: Build image
+          uses: docker/build-push-action@v6.12.0
+          with:
+            tags: ${{ steps.meta.outputs.tags }}
+            labels: ${{ steps.meta.outputs.labels }}
+            cache-from: type=gha
+            cache-to: type=gha,mode=max
+            secrets: |
+              "github_token=${{ steps.get_access_token.outputs.token }}"

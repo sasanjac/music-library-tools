@@ -1,3 +1,5 @@
+# Copyright (c) 2024-2025 Sasan Jacob Rasti
+
 from __future__ import annotations
 
 import json
@@ -47,7 +49,10 @@ class MusicImportDaemon:
     export_electro_path: pathlib.Path
     export_general_path: pathlib.Path
 
-    def _prepare_files(self, path: pathlib.Path) -> Sequence[pathlib.Path]:
+    @staticmethod
+    def prepare_files(
+        path: pathlib.Path,
+    ) -> Sequence[pathlib.Path]:
         files = [f for f in path.iterdir() if f.is_file()]
         if any(f.suffix == ".temp" for f in files):
             msg = "Album not finished downloading."
@@ -65,7 +70,10 @@ class MusicImportDaemon:
 
         return files
 
-    def _check_track_numbers(self, files: Sequence[pathlib.Path]) -> None:
+    @staticmethod
+    def check_track_numbers(
+        files: Sequence[pathlib.Path],
+    ) -> None:
         try:
             track_nos = [int(utils.audio(f)["tracknumber"][0]) for f in files]
         except KeyError as e:
@@ -95,7 +103,10 @@ class MusicImportDaemon:
             msg = "Album is moved to general music."
             raise ValueError(msg)
 
-    def _compile_id3_data(self, files: Sequence[pathlib.Path]) -> ID3Data:
+    def _compile_id3_data(
+        self,
+        files: Sequence[pathlib.Path],
+    ) -> ID3Data:
         albums = [utils.audio(f)["album"][0] for f in files]
         if len(set(albums)) == 1:
             album = albums[0]
@@ -110,7 +121,10 @@ class MusicImportDaemon:
         id3_data = ID3Data(album=album, albumartist=albumartist, genre=genre, label=label)
         return self._get_id3_from_beatport(files=files, id3_data=id3_data)
 
-    def _compile_album_artists(self, files: Sequence[pathlib.Path]) -> str:
+    @staticmethod
+    def _compile_album_artists(
+        files: Sequence[pathlib.Path],
+    ) -> str:
         try:
             artists = [e for f in files for e in utils.audio(f)["artist"][0].split(", ")]
         except KeyError:
@@ -125,11 +139,14 @@ class MusicImportDaemon:
 
         audio_file = utils.audio(files[0])
         try:
-            return audio_file["albumartist"][0]
-        except KeyError:
-            return audio_file["artist"][0]
+            return t.cast("str", audio_file["albumartist"][0])
+        except IndexError:
+            return t.cast("str", audio_file["artist"][0])
 
-    def _create_label_tag(self, files: Sequence[pathlib.Path]) -> str:
+    @staticmethod
+    def _create_label_tag(
+        files: Sequence[pathlib.Path],
+    ) -> str:
         try:
             labels = [utils.audio(f)["organization"][0] for f in files]
         except KeyError:
@@ -140,12 +157,16 @@ class MusicImportDaemon:
                 labels = [""]
 
         if len(set(labels)) == 1:
-            return labels[0]
+            return t.cast("str", labels[0])
 
         msg = "Audio files have different labels as tags"
         raise ValueError(msg)
 
-    def _create_request(self, files: Sequence[pathlib.Path], id3_data: ID3Data) -> str:
+    @staticmethod
+    def _create_request(
+        files: Sequence[pathlib.Path],
+        id3_data: ID3Data,
+    ) -> str:
         audio_file = utils.audio(files[0])
         req_album = urllib.parse.quote_plus(id3_data.album)
         if id3_data.albumartist == "Various Artists":
@@ -155,7 +176,7 @@ class MusicImportDaemon:
 
         try:
             req_year = audio_file["year"][0].split("-")[0]
-        except KeyError:
+        except IndexError:
             req_year = ""
 
         return f"https://www.beatport.com/search?q={req_album}+{req_artist}+{req_year}"
@@ -164,11 +185,15 @@ class MusicImportDaemon:
         req_str = self._create_request(files=files, id3_data=id3_data)
         try:
             return self._handle_id3_beatport_request(req_str=req_str, id3_data=id3_data)
-        except KeyError:
+        except IndexError:
             id3_data.isrc = "TODO"
             return id3_data
 
-    def _handle_id3_beatport_request(self, req_str: str, id3_data: ID3Data) -> ID3Data:
+    @staticmethod
+    def _handle_id3_beatport_request(
+        req_str: str,
+        id3_data: ID3Data,
+    ) -> ID3Data:
         data = (
             requests.get(req_str, headers=HEADERS, timeout=120)
             .text.split('<script id="__NEXT_DATA__" type="application/json">')[1]
@@ -181,15 +206,15 @@ class MusicImportDaemon:
             entry = next(e for e in data_json if e["score"] == max_score)
             if entry["score"] <= MIN_SCORE:
                 msg = f"ID3 entry score too low: {entry['score']}"
-                raise KeyError(msg)
+                raise IndexError(msg)
 
             isrc_str = entry["catalog_number"]
             try:
                 isrc = re.split(r"(\d+)", isrc_str)[:3]
-                if isrc[2] in ["DIG", "CD", "DIGITAL"]:
+                if isrc[2] in {"DIG", "CD", "DIGITAL"}:
                     isrc[2] = ""
                 id3_data.isrc = "".join(isrc)
-            except KeyError:
+            except IndexError:
                 id3_data.isrc = isrc_str
 
             genres = [e["genre_name"] for e in entry["genre"]]
@@ -197,9 +222,12 @@ class MusicImportDaemon:
             return id3_data
 
         msg = "Could not get ID3 data."
-        raise KeyError(msg)
+        raise IndexError(msg)
 
-    def _create_export_path(self, id3_data: ID3Data) -> pathlib.Path:
+    def _create_export_path(
+        self,
+        id3_data: ID3Data,
+    ) -> pathlib.Path:
         albumartist = id3_data.albumartist.replace("/", "_")
         album = id3_data.album.replace("/", "_")
         if id3_data.isrc != "TODO":
@@ -208,13 +236,21 @@ class MusicImportDaemon:
             export_path = self.todo_path / albumartist / (id3_data.isrc + " - " + album)
         return utils.sanitize_file_path(export_path)
 
-    def _finalize_file(self, file: pathlib.Path, id3_data: ID3Data) -> None:
+    def _finalize_file(
+        self,
+        file: pathlib.Path,
+        id3_data: ID3Data,
+    ) -> None:
         audio_file = utils.audio(file)
         audio_file = self._apply_id3_data(audio_file, id3_data)
         audio_file = self._fix_title(audio_file)
         audio_file.save()
 
-    def _apply_id3_data(self, audio_file: FLAC | EasyID3, id3_data: ID3Data) -> FLAC | EasyID3:
+    @staticmethod
+    def _apply_id3_data(
+        audio_file: FLAC | EasyID3,
+        id3_data: ID3Data,
+    ) -> FLAC | EasyID3:
         audio_file["isrc"] = id3_data.isrc
         audio_file["albumartist"] = id3_data.albumartist
         audio_file["album"] = id3_data.isrc + " - " + id3_data.album
@@ -226,7 +262,10 @@ class MusicImportDaemon:
 
         return audio_file
 
-    def _fix_title(self, audio_file: FLAC | EasyID3) -> FLAC | EasyID3:
+    @staticmethod
+    def _fix_title(
+        audio_file: FLAC | EasyID3,
+    ) -> FLAC | EasyID3:
         title = audio_file["title"][0]
         # Add Original Mix if no already there
         if not any(mix_str in title.upper() for mix_str in MIX_STRS):
@@ -240,7 +279,9 @@ class MusicImportDaemon:
             audio_file["title"] = title.replace("]", ")")
         return audio_file
 
-    def import_music(self) -> None:
+    def import_music(
+        self,
+    ) -> None:
         artist_paths = [d for d in self.import_path.iterdir() if d.is_dir()]
         if len(artist_paths) > 0:
             for art_dir in artist_paths:
@@ -258,12 +299,15 @@ class MusicImportDaemon:
 
             logger.info("Importing music completed.")
 
-    def import_album(self, album_path: pathlib.Path) -> None:
+    def import_album(
+        self,
+        album_path: pathlib.Path,
+    ) -> None:
         logger.info(f"Checking files for album {album_path.name} ...")
         try:
-            files = self._prepare_files(album_path)
+            files = self.prepare_files(album_path)
             self._filter_general_music(files)
-            self._check_track_numbers(files)
+            self.check_track_numbers(files)
             logger.info(f"Compiling ID3 data for album {album_path.name} ...")
             id3_data = self._compile_id3_data(files)
             logger.info(f"Importing album {album_path.name} ...")
