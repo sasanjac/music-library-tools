@@ -22,7 +22,6 @@ def main() -> None:
     export_electro_path = pathlib.Path("/data/export_electro")
     export_general_path = pathlib.Path("/data/export_general")
 
-
     mid = MusicImportDaemon(
         import_path=import_path,
         todo_path=todo_path,
@@ -44,6 +43,7 @@ def main() -> None:
     while True:
         schedule.run_pending()
         time.sleep(10)
+
 
 if __name__ == "__main__":
     main()

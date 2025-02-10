@@ -2,7 +2,13 @@
   authors = [
     { name = "Sasan Jacob Rasti", email = "sasan.accounts@icloud.com" },
   ]
-  dependencies = ["loguru", "mutagen", "requests", "schedule", "tinytag"]
+  dependencies = [
+    "loguru",
+    "mutagen",
+    "requests",
+    "schedule",
+    "tinytag",
+  ]
   description = ""
   license = { file = "LICENSE" }
   name = "music-library-tools"
@@ -147,4 +153,4 @@
       "pytest>=8.3.1",
       "ruff>=0.5.5",
       "types-requests>=2.32.0.20241016",
-]
+    ]
