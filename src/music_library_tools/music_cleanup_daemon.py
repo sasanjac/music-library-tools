@@ -1,3 +1,5 @@
+# Copyright (c) 2024-2025 Sasan Jacob Rasti
+
 from __future__ import annotations
 
 import contextlib
@@ -44,10 +46,9 @@ class MusicCleanupDaemon:
         with contextlib.suppress(OSError):
             album_path.rmdir()
 
-        files = [f for f in album_path.iterdir() if f.suffix in [".flac", ".mp3"]]
+        files = [f for f in album_path.iterdir() if f.suffix in {".flac", ".mp3"}]
         if len(files) == 0:
             logger.error(f"{album_path} is empty")
-            return
 
         for f in files:
             tag = TinyTag.get(album_path / f)

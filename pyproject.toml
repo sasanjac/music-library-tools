@@ -4,104 +4,147 @@
   ]
   dependencies = ["loguru", "mutagen", "requests", "schedule", "tinytag"]
   description = ""
-  dynamic = ["classifiers"]
-  license = { text = "MIT" }
+  license = { file = "LICENSE" }
   name = "music-library-tools"
-  requires-python = ">=3.11"
+  requires-python = ">=3.13"
   version = "0.1.0"
 
   [project.urls]
     homepage = "https://github.com/sasanjac/music-library-tools"
 
-  [project.optional-dependencies]
+  [project.scripts]
+    music-library-tools = "music_library_tools.cli:main"
 
 [build-system]
-  build-backend = "pdm.pep517.api"
-  requires      = ["pdm-pep517"]
+  build-backend = "hatchling.build"
+  requires      = ["hatchling"]
 
 [tool]
-
-  [tool.pdm]
-
-    [tool.pdm.dev-dependencies]
-      linter    = ["ruff"]
-      prototype = ["ipykernel", "ipywidgets"]
-      testing   = ["pytest"]
-      typing    = ["mypy", "types-requests"]
-
-[tool.ruff]
-  line-length = 120
-
-  [tool.ruff.lint]
-    ignore = [
-      "ANN002",
-      "ANN003",
-      "ANN101",
-      "ANN102",
-      "C901",
-      "D100",
-      "D101",
-      "D102",
-      "D103",
-      "D104",
-      "D105",
-      "D106",
-      "D107",
-      "D202",
-      "D203",
-      "D401",
-      "E402",
-      "E501",
+  [tool.commitizen]
+    name = "cz_conventional_commits"
+    tag_format = "$version"
+    version = "0.1.0"
+    version_files = [
+      "pyproject.toml:version",
+      "src/music_library_tools/__version__.py:VERSION",
     ]
-    select = ["ALL"]
 
-    [tool.ruff.lint.flake8-type-checking]
-      runtime-evaluated-decorators = [
-        "attrs.define",
-        "attrs.frozen",
-        "pydantic.dataclasses.dataclass",
+  [tool.coverage.report]
+    show_missing = true
+
+  [tool.coverage.run]
+    branch = true
+    omit   = ["__pypackages__/*", "build/*", "tests/*"]
+    source = ["src/music_library_tools"]
+
+  [tool.coverage.xml]
+    output = "coverage.xml"
+
+  [tool.hatch.metadata]
+    allow-direct-references = true
+
+  [tool.hatch.build.targets.wheel]
+    packages = ["src/music_library_tools"]
+
+  [tool.mypy]
+    check_untyped_defs      = true
+    disallow_any_unimported = true
+    disallow_untyped_defs   = true
+    follow_imports          = "normal"
+    mypy_path               = "src/music_library_tools"
+    namespace_packages      = true
+    no_implicit_optional    = true
+    show_error_codes        = true
+    strict_optional         = true
+    warn_no_return          = true
+    warn_redundant_casts    = true
+    warn_return_any         = true
+    warn_unused_ignores     = true
+
+  [tool.pyright]
+    exclude               = ["**/__pycache__"]
+    reportInvalidTypeForm = "none"
+    typeCheckingMode      = "off"
+
+  [tool.pytest.ini_options]
+    python_files = "test_*.py"
+    testpaths    = ["tests"]
+
+  [tool.ruff]
+    line-length = 120
+
+    [tool.ruff.format]
+      preview = true
+
+    [tool.ruff.lint]
+      ignore = [
+        "ANN002",
+        "ANN003",
+        "C901",
+        "D100",
+        "D101",
+        "D102",
+        "D103",
+        "D104",
+        "D105",
+        "D106",
+        "D107",
+        "D202",
+        "D203",
+        "D401",
+        "E402",
+        "E501",
+        "FIX002",
       ]
+      preview = true
+      select = ["ALL"]
 
-    [tool.ruff.lint.isort]
-      force-single-line = true
+      [tool.ruff.lint.flake8-copyright]
+        author = "Sasan Jacob Rasti"
 
-    [tool.ruff.lint.pydocstyle]
-      convention = "pep257"
+      [tool.ruff.lint.flake8-type-checking]
+        runtime-evaluated-base-classes = [
+          "pydantic.BaseModel",
+        ]
+        runtime-evaluated-decorators = [
+          "attrs.define",
+        ]
 
-    [tool.ruff.lint.pep8-naming]
-      classmethod-decorators = [
-        "classmethod",
-        "pydantic.root_validator",
-        "pydantic.validator",
-      ]
+      [tool.ruff.lint.isort]
+        force-single-line = true
 
-    [tool.ruff.lint.pylint]
-      max-args = 10
+      [tool.ruff.lint.pydocstyle]
+        convention = "pep257"
 
-    [tool.ruff.lint.flake8-import-conventions.extend-aliases]
-      "datetime"         = "dt"
-      "geopandas"        = "gpd"
-      "gymnasium"        = "gym"
-      "numpy.typing"     = "npt"
-      "pandapower"       = "pp"
-      "rasterio"         = "rio"
-      "shapely.geometry" = "shg"
-      "simbench"         = "sb"
-      "typing"           = "t"
+      [tool.ruff.lint.pep8-naming]
+        classmethod-decorators = ["classmethod"]
 
-[tool.ruff.lint.per-file-ignores]
-  "tests/*" = ["ANN001", "ANN201", "INP001", "S101"]
+      [tool.ruff.lint.pylint]
+        allow-dunder-method-names = [
+          "__get_pydantic_core_schema__",
+          "__get_pydantic_json_schema__",
+        ]
+        max-args = 10
 
+      [tool.ruff.lint.flake8-import-conventions.extend-aliases]
+        "collections.abc" = "cabc"
+        "datetime"        = "dt"
+        "numpy"           = "np"
+        "numpy.typing"    = "npt"
+        "typing"          = "t"
+        "zoneinfo"        = "zi"
 
-[tool.mypy]
-  follow_imports         = "normal"
-  ignore_missing_imports = true
-  mypy_path              = "music_library_tools"
-  namespace_packages     = true
-  strict_optional        = true
-  warn_no_return         = true
-  warn_redundant_casts   = true
-  warn_unused_ignores    = true
+      [tool.ruff.lint.per-file-ignores]
+        "tests/*" = ["ANN001", "ANN201", "INP001", "S101"]
 
-[tool.pyright]
-  exclude = ["**/__pycache__"]
+  [tool.uv]
+    dev-dependencies = [
+      "commitizen>=3.28.0",
+      "ipykernel>=6.29.5",
+      "mypy>=1.11.0",
+      "pytest-cov>=5.0.0",
+      "pytest-xdist>=3.6.1",
+      "pytest>=8.3.1",
+      "ruff>=0.5.5",
+      "types-requests>=2.32.0.20241016",
+]
