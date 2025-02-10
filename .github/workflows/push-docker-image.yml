@@ -52,7 +52,6 @@
           with:
             application_id: ${{ secrets.WORKFLOW_ASSISTANT_APP_ID }}
             application_private_key: ${{ secrets.WORKFLOW_ASSISTANT_PRIVATE_KEY }}
-            organization: ${{ github.repository_owner }}
             revoke_token: true
 
         - name: Push docker image
