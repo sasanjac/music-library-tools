@@ -153,8 +153,11 @@ class MusicImportDaemon:
             try:
                 labels = [utils.audio(f)["publisher"][0] for f in files]
             except KeyError:
-                logger.exception("Can't determine label.")
-                labels = [""]
+                try:
+                    labels = [utils.audio(f)["composer"][0] for f in files]
+                except KeyError:
+                    logger.exception("Can't determine label.")
+                    labels = [""]
 
         if len(set(labels)) == 1:
             return t.cast("str", labels[0])
