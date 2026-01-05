@@ -13,7 +13,7 @@
   license = { file = "LICENSE" }
   name = "music-library-tools"
   requires-python = ">=3.13"
-  version = "0.1.0"
+  version = "1.0.0"
 
   [project.urls]
     homepage = "https://github.com/sasanjac/music-library-tools"
@@ -29,7 +29,7 @@
   [tool.commitizen]
     name = "cz_conventional_commits"
     tag_format = "$version"
-    version = "0.1.0"
+    version = "1.0.0"
     version_files = [
       "pyproject.toml:version",
       "src/music_library_tools/__version__.py:VERSION",
