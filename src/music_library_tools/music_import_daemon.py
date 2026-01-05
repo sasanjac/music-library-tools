@@ -75,7 +75,7 @@ class MusicImportDaemon:
         files: Sequence[pathlib.Path],
     ) -> None:
         try:
-            track_nos = [int(utils.audio(f)["tracknumber"][0]) for f in files]
+            track_nos = [int(utils.audio(f)["tracknumber"][0].split("/")[0]) for f in files]
         except KeyError as e:
             msg = "Something wrong with audio file. Probably still downloading."
             raise ValueError(msg) from e
